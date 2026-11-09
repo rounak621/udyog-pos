@@ -4,6 +4,10 @@ import { PassportStrategy } from '@nestjs/passport';
 import type { SessionUser } from '@nodedr-restaurant/types';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  RESTAURANT_ACCESS_SELECT,
+  assertRestaurantAllowed,
+} from '../common/restaurant-access';
 
 interface JwtPayload {
   sub: string;
@@ -33,12 +37,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       where: { id: payload.sub },
       include: {
         role: { include: { permissions: { include: { permission: true } } } },
+        restaurant: { select: RESTAURANT_ACCESS_SELECT },
       },
     });
 
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Session no longer valid');
     }
+    // Hosted mode: a suspended or expired restaurant is locked on every
+    // request (403 + code). Platform admins always get through.
+    assertRestaurantAllowed(user.restaurant, {
+      isPlatformAdmin: user.isPlatformAdmin,
+    });
 
     return {
       id: user.id,

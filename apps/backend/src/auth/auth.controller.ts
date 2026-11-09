@@ -158,8 +158,12 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(@CurrentUser() user: unknown) {
-    return { user };
+  async me(@CurrentUser() user: SessionUser) {
+    // Hosted mode: status/trial for the trial banner and lock screen.
+    const restaurant = await this.authService.restaurantAccess(
+      user.restaurantId,
+    );
+    return { user, restaurant };
   }
 
   // Public and unauthenticated — the marketing/login page needs this before

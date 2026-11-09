@@ -12,6 +12,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import type { Prisma } from '@prisma/client';
 import { openSecret, sealSecret } from '../../auth/totp';
 import { PrismaService } from '../../prisma/prisma.service';
+import { allowedRestaurantWhere } from '../../common/restaurant-access';
 import {
   netOptionsFromEnv,
   resolveWebhookTarget,
@@ -246,7 +247,12 @@ export class WebhooksService {
   async tick() {
     try {
       const due = await this.prisma.webhookDelivery.findMany({
-        where: { status: 'PENDING', nextAttemptAt: { lte: new Date() } },
+        where: {
+          status: 'PENDING',
+          nextAttemptAt: { lte: new Date() },
+          // Locked restaurants: deliveries wait (kept, not dropped).
+          endpoint: { restaurant: allowedRestaurantWhere() },
+        },
         select: { id: true },
         orderBy: { nextAttemptAt: 'asc' },
         take: BATCH,

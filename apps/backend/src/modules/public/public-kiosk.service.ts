@@ -7,6 +7,7 @@ import {
 import { resolveTaxLabel, type KioskOrderDto } from '@nodedr-restaurant/types';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { isRestaurantAllowed } from '../../common/restaurant-access';
 import { OrdersService } from '../orders/orders.service';
 import { PublicMenuService } from './public-menu.service';
 
@@ -37,7 +38,12 @@ export class PublicKioskService {
       where: { kioskToken },
       include: { restaurant: true },
     });
-    if (!branch || !branch.isActive) {
+    // A locked restaurant answers exactly like an unknown kiosk token.
+    if (
+      !branch ||
+      !branch.isActive ||
+      !isRestaurantAllowed(branch.restaurant)
+    ) {
       throw new NotFoundException('This kiosk is not available');
     }
     return branch;

@@ -7,6 +7,10 @@ import {
 import { createHash } from 'node:crypto';
 import type { SessionUser } from '@nodedr-restaurant/types';
 import { PrismaService } from '../../prisma/prisma.service';
+import {
+  RESTAURANT_ACCESS_SELECT,
+  assertRestaurantAllowed,
+} from '../restaurant-access';
 import type { AuthenticatedRequest } from '../types/authenticated-request';
 
 // Authenticates the MCP server (src/mcp/) via a personal access token
@@ -45,6 +49,7 @@ export class StaffApiKeyGuard implements CanActivate {
             role: {
               include: { permissions: { include: { permission: true } } },
             },
+            restaurant: { select: RESTAURANT_ACCESS_SELECT },
           },
         },
       },
@@ -56,6 +61,8 @@ export class StaffApiKeyGuard implements CanActivate {
     if (!key.user.isActive) {
       throw new UnauthorizedException('Staff account is not active');
     }
+    // API keys never carry platform-admin rights, so no exemption here.
+    assertRestaurantAllowed(key.user.restaurant);
 
     const sessionUser: SessionUser = {
       id: key.user.id,

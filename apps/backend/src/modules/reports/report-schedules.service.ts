@@ -8,6 +8,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import type { ReportFrequency, ReportSchedule } from '@prisma/client';
 import { BranchTimeService } from '../../common/services/branch-time.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { allowedRestaurantWhere } from '../../common/restaurant-access';
 import { EmailService } from '../email/email.service';
 import { EXPORT_TYPES, isExportFormat, renderReport } from './export';
 import { REPORT_CATALOG, ReportsService } from './reports.service';
@@ -178,7 +179,11 @@ export class ReportSchedulesService {
     try {
       if (!this.email.isConfigured()) return;
       const schedules = await this.prisma.reportSchedule.findMany({
-        where: { isActive: true },
+        // Locked restaurants get no scheduled reports.
+        where: {
+          isActive: true,
+          branch: { restaurant: allowedRestaurantWhere() },
+        },
       });
       for (const s of schedules) {
         const tz = await this.time.tzForBranch(s.branchId);

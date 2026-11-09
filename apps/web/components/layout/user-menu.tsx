@@ -14,9 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLogout } from "@/hooks/use-auth";
+import { SUPPORT_EMAIL } from "@/lib/support";
 
-// Inlined at build time (NEXT_PUBLIC_). Empty or unset = no support item.
-const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() ?? "";
 
 function initials(name?: string) {
   if (!name) return "?";

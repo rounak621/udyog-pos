@@ -14,6 +14,7 @@ import { LanguageSwitcher } from "./language-switcher";
 import { Logo } from "./logo";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { SidebarNav } from "./sidebar-nav";
+import { TrialBanner } from "./trial-banner";
 import { UserMenu } from "./user-menu";
 
 // The restaurant's own logo + name lead the sidebar header — this is
@@ -114,6 +115,7 @@ export function AppShell({
             <UserMenu user={user} />
           </div>
         </header>
+        <TrialBanner />
         <main className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8">{children}</main>
         <EntityDialogHost />
       </div>

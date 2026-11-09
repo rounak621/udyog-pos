@@ -8,6 +8,10 @@ import {
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
 import { BranchAccessService } from '../common/services/branch-access.service';
+import {
+  RESTAURANT_ACCESS_SELECT,
+  isRestaurantAllowed,
+} from '../common/restaurant-access';
 import { PrismaService } from '../prisma/prisma.service';
 
 // One gateway, room-per-branch — KDS/table-status/order-tracking all join
@@ -61,8 +65,11 @@ export class RealtimeGateway
       const payload = this.jwt.verify<{ sub: string }>(token);
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
+        include: { restaurant: { select: RESTAURANT_ACCESS_SELECT } },
       });
       if (!user || !user.isActive) throw new Error('Session no longer valid');
+      if (!user.isPlatformAdmin && !isRestaurantAllowed(user.restaurant))
+        throw new Error('Restaurant is locked');
 
       const branchId = client.handshake.query.branchId;
       if (typeof branchId !== 'string' || !branchId) {

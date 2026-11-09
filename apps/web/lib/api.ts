@@ -1,3 +1,5 @@
+import { ACCESS_BLOCK_CODES, type AccessBlockCode } from "@nodedr-restaurant/types";
+
 const API_BASE = "/api/v1";
 
 export class ApiError extends Error {
@@ -27,6 +29,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ message: res.statusText }));
+    // Hosted mode: a suspended or expired restaurant goes to the lock screen.
+    if (
+      res.status === 403 &&
+      ACCESS_BLOCK_CODES.includes(body.code as AccessBlockCode) &&
+      typeof window !== "undefined" &&
+      window.location.pathname !== "/account-blocked"
+    ) {
+      window.location.assign(`/account-blocked?code=${encodeURIComponent(body.code)}`);
+    }
     throw new ApiError(body.message ?? "Request failed", res.status, body.issues, body.code);
   }
 

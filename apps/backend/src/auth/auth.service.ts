@@ -9,6 +9,7 @@ import {
   DEFAULT_ROLE_PERMISSIONS,
   PERMISSIONS,
   STAFF_ROLES,
+  getAccessState,
   resolveTrialDays,
   type LoginDto,
   type PinLoginDto,
@@ -18,6 +19,10 @@ import {
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { TwoFactorService } from './two-factor.service';
+import {
+  RESTAURANT_ACCESS_SELECT,
+  assertRestaurantAllowed,
+} from '../common/restaurant-access';
 
 // A throwaway bcrypt hash compared against when PIN login fails before the
 // real check, so a missing user takes about as long as a wrong PIN.
@@ -61,6 +66,7 @@ export class AuthService {
       orderBy: { createdAt: 'asc' },
       include: {
         role: { include: { permissions: { include: { permission: true } } } },
+        restaurant: { select: RESTAURANT_ACCESS_SELECT },
       },
     });
 
@@ -79,6 +85,11 @@ export class AuthService {
       await this.twoFactor.verifyLogin(user, dto.totp);
     }
 
+    // Checked only after the password (and 2FA) is right, so a locked
+    // restaurant is never revealed to someone guessing passwords.
+    assertRestaurantAllowed(user.restaurant, {
+      isPlatformAdmin: user.isPlatformAdmin,
+    });
     return this.issueSession(user);
   }
 
@@ -187,6 +198,20 @@ export class AuthService {
     return this.issueSession(owner);
   }
 
+  /** Status, trial end and days left (getAccessState) for /auth/me. */
+  async restaurantAccess(restaurantId: string) {
+    const r = await this.prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      select: RESTAURANT_ACCESS_SELECT,
+    });
+    if (!r) return null;
+    return {
+      status: r.status,
+      trialEndsAt: r.trialEndsAt,
+      daysLeft: getAccessState(r).daysLeft,
+    };
+  }
+
   async hasAnyRestaurant(): Promise<boolean> {
     const restaurant = await this.prisma.restaurant.findFirst({
       select: { id: true },
@@ -206,6 +231,7 @@ export class AuthService {
       },
       include: {
         role: { include: { permissions: { include: { permission: true } } } },
+        restaurant: { select: RESTAURANT_ACCESS_SELECT },
       },
     });
     const fail = () => new UnauthorizedException('Invalid PIN login');
@@ -219,6 +245,9 @@ export class AuthService {
     const valid = await bcrypt.compare(dto.pin, user.pinHash);
     if (!valid) throw fail();
 
+    assertRestaurantAllowed(user.restaurant, {
+      isPlatformAdmin: user.isPlatformAdmin,
+    });
     return this.issueSession(user);
   }
 

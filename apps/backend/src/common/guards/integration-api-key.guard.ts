@@ -9,6 +9,10 @@ import { Reflector } from '@nestjs/core';
 import { createHash } from 'node:crypto';
 import type { Request } from 'express';
 import { PrismaService } from '../../prisma/prisma.service';
+import {
+  RESTAURANT_ACCESS_SELECT,
+  assertRestaurantAllowed,
+} from '../restaurant-access';
 import { INTEGRATION_SCOPES_KEY } from '../decorators/require-scope.decorator';
 
 // Authenticates every route on IntegrationsController — the public REST API
@@ -40,10 +44,12 @@ export class IntegrationApiKeyGuard implements CanActivate {
     const tokenHash = createHash('sha256').update(rawToken).digest('hex');
     const key = await this.prisma.integrationApiKey.findUnique({
       where: { tokenHash },
+      include: { restaurant: { select: RESTAURANT_ACCESS_SELECT } },
     });
     if (!key || key.revokedAt) {
       throw new UnauthorizedException('Invalid or revoked API key');
     }
+    assertRestaurantAllowed(key.restaurant);
 
     const required = this.reflector.getAllAndOverride<string[]>(
       INTEGRATION_SCOPES_KEY,

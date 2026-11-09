@@ -2,6 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import type { CartItemDto } from '@nodedr-restaurant/types';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import {
+  RESTAURANT_ACCESS_SELECT,
+  isRestaurantAllowed,
+} from '../../common/restaurant-access';
 import { RealtimeGateway } from '../../realtime/realtime.gateway';
 import { OrdersService } from '../orders/orders.service';
 
@@ -17,9 +21,19 @@ export class PublicMenuService {
   private async resolveTable(qrToken: string) {
     const table = await this.prisma.table.findUnique({
       where: { qrToken },
-      include: { floor: { include: { branch: true } } },
+      include: {
+        floor: {
+          include: {
+            branch: {
+              include: { restaurant: { select: RESTAURANT_ACCESS_SELECT } },
+            },
+          },
+        },
+      },
     });
-    if (!table) throw new NotFoundException('This QR code is not recognized');
+    // A locked restaurant answers exactly like an unknown QR code.
+    if (!table || !isRestaurantAllowed(table.floor.branch.restaurant))
+      throw new NotFoundException('This QR code is not recognized');
     return table;
   }
 
