@@ -90,7 +90,7 @@ export class BackupController {
     const { workDir, dbDumpPath, uploadsArchivePath } =
       await this.backupService.prepareLocalExport(user);
 
-    const filename = `orderrestro-backup-${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
+    const filename = `udyog-pos-backup-${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 

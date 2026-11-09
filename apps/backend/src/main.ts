@@ -126,7 +126,7 @@ async function bootstrap() {
       .setTitle('UDYOG POS API')
       .setDescription('REST API for the UDYOG POS management system')
       .setVersion('1.0')
-      .addCookieAuth('nodedr_session')
+      .addCookieAuth('udyog_session')
       .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api/docs', app, document);

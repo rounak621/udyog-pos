@@ -254,9 +254,9 @@ website can show the price before the guest orders:
 Add one under **Settings > Webhooks**. Each request is a `POST` with a JSON
 body `{ "event", "createdAt", "data" }` and these headers:
 
-- `X-OrderRestro-Event` — the event name
-- `X-OrderRestro-Delivery` — unique delivery id (use it to de-duplicate)
-- `X-OrderRestro-Signature` — `t=<unix seconds>,v1=<hex>` where `v1` is the
+- `X-UDYOG-Event` — the event name
+- `X-UDYOG-Delivery` — unique delivery id (use it to de-duplicate)
+- `X-UDYOG-Signature` — `t=<unix seconds>,v1=<hex>` where `v1` is the
   HMAC-SHA256 of `"<t>.<raw body>"` using the endpoint's signing secret
   (shown once when you create it). Reject requests older than 5 minutes.
 

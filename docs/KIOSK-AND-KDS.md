@@ -97,7 +97,7 @@ exercised in a desktop browser, not on the RK3576 / the real devices.**
 | Printing from Android Chrome | **Unverified.** The button only opens the browser print dialog (`window.print()`); it can't print silently and can't tell whether a printer exists. Requires an Android print service for the printer (vendor plugin / Mopria). If `window.print` is missing the screen says printing is unavailable. Paper-cut behaviour depends on the driver: **unverified**. |
 | Direct USB ESC/POS | Exists in the backend but only for a Linux **host** with USB passthrough (`escpos-usb.ts`). It does **not** run on Android and is **not** used by the kiosk. |
 | Silent print / Bluetooth / built-in printer / cash drawer from the kiosk | **Not implemented, not claimed.** Would need a small Android companion app or WebView bridge; see below. |
-| QR/barcode scanner as USB-HID keyboard wedge | **Unverified** on hardware; implemented as a plain focused text field on **Orders** (`lib/scan.ts`): strips scanner control characters, accepts only `orderrestro:order:<number>`, a bare order number, or a table-QR URL, rejects everything else, and only *opens* the order. Typing the number is the manual fallback. |
+| QR/barcode scanner as USB-HID keyboard wedge | **Unverified** on hardware; implemented as a plain focused text field on **Orders** (`lib/scan.ts`): strips scanner control characters, accepts only `udyogpos:order:<number>`, a bare order number, or a table-QR URL, rejects everything else, and only *opens* the order. Typing the number is the manual fallback. |
 | Scanner with a camera/SDK/serial (SPP) interface | Not supported; no camera API is assumed. |
 
 ### Facts needed from the vendors for direct integration

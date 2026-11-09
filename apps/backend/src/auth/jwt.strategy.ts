@@ -12,7 +12,7 @@ interface JwtPayload {
 const cookieExtractor = (req: {
   cookies?: Record<string, string>;
 }): string | null => {
-  return req.cookies?.['nodedr_session'] ?? null;
+  return req.cookies?.['udyog_session'] ?? null;
 };
 
 @Injectable()

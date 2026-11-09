@@ -26,7 +26,7 @@ import { Auth } from '../common/decorators/auth.decorator';
 import { AuthService } from './auth.service';
 import { TwoFactorService } from './two-factor.service';
 
-const SESSION_COOKIE = 'nodedr_session';
+const SESSION_COOKIE = 'udyog_session';
 const COOKIE_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
 // A `Secure` cookie is silently dropped by every browser on a plain

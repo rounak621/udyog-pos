@@ -167,7 +167,7 @@ export default function WebhooksPage() {
       <Card className="max-w-3xl p-6 text-sm text-muted-foreground">
         <p className="font-medium text-foreground">Verifying a request</p>
         <p className="mt-1">
-          Each request has an <code>X-OrderRestro-Signature</code> header: <code>t=&lt;unix time&gt;,v1=&lt;hex&gt;</code>,
+          Each request has an <code>X-UDYOG-Signature</code> header: <code>t=&lt;unix time&gt;,v1=&lt;hex&gt;</code>,
           where <code>v1</code> is the HMAC-SHA256 of <code>{"{t}.{raw body}"}</code> with your signing secret. Reject
           anything older than five minutes. Failed deliveries are retried up to 6 times (1 min, 5 min, 30 min, 2 h,
           12 h). Respond with any 2xx to accept.

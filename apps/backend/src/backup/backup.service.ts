@@ -344,7 +344,7 @@ export class BackupService {
       data: { triggeredById, status: 'PENDING' },
     });
     const workDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'orderrestro-backup-'),
+      path.join(os.tmpdir(), 'udyog-pos-backup-'),
     );
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const dbDumpPath = path.join(workDir, 'db.dump');
@@ -559,7 +559,7 @@ export class BackupService {
       entityId: 'local',
     });
     const workDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'orderrestro-export-'),
+      path.join(os.tmpdir(), 'udyog-pos-export-'),
     );
     try {
       const dbDumpPath = path.join(workDir, 'db.dump');
@@ -651,7 +651,7 @@ export class BackupService {
 
     const s3 = this.s3Client(config);
     const workDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'orderrestro-restore-'),
+      path.join(os.tmpdir(), 'udyog-pos-restore-'),
     );
     const dbDumpPath = path.join(workDir, 'db.dump');
     const uploadsArchivePath = path.join(workDir, 'uploads.tar.gz');

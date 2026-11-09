@@ -232,7 +232,7 @@ export class McpToolsBuilder {
 
   build(actor: SessionUser): McpServer {
     const server = new McpServer(
-      { name: 'orderrestro', version: '1.0.0' },
+      { name: 'udyog-pos', version: '1.0.0' },
       { capabilities: { tools: {} } },
     );
     const tools = this.toolDefs(actor);
