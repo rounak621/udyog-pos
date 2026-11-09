@@ -46,6 +46,10 @@ services:
       VERIFACTU_PRODUCER_COUNTRY: "${VERIFACTU_PRODUCER_COUNTRY:-}"
       VERIFACTU_SYSTEM_ID: "${VERIFACTU_SYSTEM_ID:-}"
       SYNC_API_KEY: "${SYNC_API_KEY:-}"
+      # Hosted mode (see .env.example): open sign-up, trial length, proxy hops.
+      ALLOW_SIGNUP: "${ALLOW_SIGNUP:-}"
+      TRIAL_DAYS: "${TRIAL_DAYS:-14}"
+      TRUST_PROXY: "${TRUST_PROXY:-}"
       # In-app updates (Settings > Updates): the backend asks the `updater`
       # container below to pull the latest published images. Unset these two
       # and the Update button simply says this install can't update itself.
