@@ -27,10 +27,8 @@ services:
       dockerfile: apps/backend/Dockerfile
       args:
         APP_VERSION: "${APP_VERSION:-dev}"
-    # Same name CI publishes. `up --build` tags the local build with it, and
-    # the in-app "Update now" button (see the `updater` service below) pulls
-    # the published image of a newer version under it.
-    image: ghcr.io/raktim94/nodedr-restaurant-pos-backend:${APP_VERSION:-dev}
+    # Built locally from this repo; never pulled from a registry.
+    image: udyog-pos-backend:local
     container_name: nodedr-restaurant-backend
     restart: unless-stopped
     environment:
@@ -107,7 +105,7 @@ services:
         # Next bakes rewrite destinations at BUILD time — this must be a
         # build ARG, not a runtime env (see apps/web/Dockerfile comment).
         BACKEND_URL: "http://backend:4000"
-    image: ghcr.io/raktim94/nodedr-restaurant-pos-web:${APP_VERSION:-dev}
+    image: udyog-pos-web:local
     container_name: nodedr-restaurant-web
     restart: unless-stopped
     ports:
@@ -123,10 +121,14 @@ services:
   # volumes untouched, rolled back if it fails). It needs the Docker socket,
   # which is why it is its own container on the internal network (no
   # published port) instead of privilege handed to the app backend.
+  # Disabled by default (auto-update is off): starts only with
+  # `docker compose --profile updater up`.
   updater:
+    profiles: ["updater"]
     build:
       context: ./updater
-    image: ghcr.io/raktim94/nodedr-restaurant-pos-updater:latest
+      dockerfile: Dockerfile
+    image: udyog-pos-updater:local
     container_name: nodedr-restaurant-updater
     restart: unless-stopped
     environment:

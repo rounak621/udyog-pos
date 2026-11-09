@@ -9,14 +9,14 @@
 # installer (which generates a .env with random secrets on first run).
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/Raktim94/nodedr-restaurant-pos/master/scripts/quickstart.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/rounak621/udyog-pos/main/scripts/quickstart.sh | bash
 #
 # Safe to re-run: every step only acts if the previous one didn't already
 # succeed, and an existing ./nodedr-restaurant-pos checkout is updated in
 # place rather than clobbered.
 set -euo pipefail
 
-REPO_URL="https://github.com/Raktim94/nodedr-restaurant-pos.git"
+REPO_URL="https://github.com/rounak621/udyog-pos.git"
 REPO_DIR="nodedr-restaurant-pos"
 SUDO=""
 
@@ -155,7 +155,8 @@ esac
 echo "==> Getting nodedr-restaurant-pos..."
 if [ -d "$REPO_DIR/.git" ]; then
   echo "Existing checkout found in ./$REPO_DIR — updating it instead of re-cloning."
-  git -C "$REPO_DIR" pull --ff-only
+  git -C "$REPO_DIR" remote set-url origin "$REPO_URL"  # never pull from an old upstream remote
+  git -C "$REPO_DIR" pull --ff-only origin main
 else
   git clone "$REPO_URL" "$REPO_DIR"
 fi
