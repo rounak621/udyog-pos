@@ -57,3 +57,9 @@ UDYOG POS = restaurant POS, white-labelled from an AGPL-3.0 open-source repo, ow
 
 ## Rate limits
 - In-memory throttler: 300/min per client IP app-wide; login, register and pin-login add 20/min per IP and 5/min per IP + email (or userId). Set TRUST_PROXY behind a reverse proxy. A shared store (Redis) is a later step, needed before running more than one backend.
+
+## Cloud decisions
+- One server, many restaurants (tenant = Restaurant). Every branchId from a client goes through BranchAccessService.assertAccess; every foreign id in a body is checked against the caller's branch/restaurant.
+- Platform admin = User.isPlatformAdmin (UDYOG staff). Not a role or permission, not in any DTO or API; API keys never carry it. PlatformAdminGuard (`@PlatformAdmin()`) guards backup, server sync admin, system update, download stats and (in production) swagger. Backup alerts go to platform admins only. Grant it only with scripts/make-platform-admin.ts (see "Platform admin" above).
+- Staff email is unique across all restaurants (checked in code; DB constraint is still per restaurant). PIN login needs the terminal's branchId.
+- Deferred: UserBranch enforcement in assertAccess; limits on imageUrl/logoUrl and per-tenant upload folders; Redis-backed rate limits; review of the sync trigger SQL (migrations).
