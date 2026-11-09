@@ -98,7 +98,11 @@ function resolveJwtSecret(): string {
 
 async function bootstrap() {
   process.env.JWT_SECRET = resolveJwtSecret();
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // rawBody: the Razorpay webhook signature is over the exact raw bytes
+  // (req.rawBody, see billing.controller.ts); the parsed body is unchanged.
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+  });
 
   // Behind a reverse proxy, req.ip (used by every rate limit) is the proxy's
   // address unless Express is told how many proxy hops to trust.

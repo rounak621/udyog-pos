@@ -23,3 +23,4 @@ export * from "./marketing";
 export * from "./order-lifecycle";
 export * from "./restaurant-status";
 export * from "./platform";
+export * from "./billing";

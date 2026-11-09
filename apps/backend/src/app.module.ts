@@ -29,6 +29,7 @@ import { WaitlistModule } from './modules/waitlist/waitlist.module';
 import { PublicModule } from './modules/public/public.module';
 import { DownloadsModule } from './modules/downloads/downloads.module';
 import { PlatformModule } from './modules/platform/platform.module';
+import { BillingModule } from './modules/billing/billing.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { GiftCardsModule } from './modules/gift-cards/gift-cards.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
@@ -76,6 +77,7 @@ import { loginThrottler } from './common/throttle/login-throttle';
     PublicModule,
     DownloadsModule,
     PlatformModule,
+    BillingModule,
     CustomersModule,
     GiftCardsModule,
     InventoryModule,
