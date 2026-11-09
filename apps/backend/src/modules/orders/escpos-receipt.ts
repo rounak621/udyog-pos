@@ -13,6 +13,9 @@ import {
   resolveTaxIdLabel,
   resolveTaxLabel,
   TAX_REGIME_PRESETS,
+  gstinStateCode,
+  indiaStateName,
+  splitIndiaGst,
   type TaxMode,
   type TaxRegime,
 } from '@nodedr-restaurant/types';
@@ -78,6 +81,9 @@ export interface EscposReceiptOrder {
   /** Applied so far / still owed; printed when set. */
   amountPaid?: number;
   balanceDue?: number;
+  /** India GST invoice: buyer GSTIN and place of supply (state code). */
+  customerGstin?: string | null;
+  placeOfSupplyStateCode?: string | null;
   items: {
     nameSnapshot: string;
     quantity: number;
@@ -167,6 +173,14 @@ export function buildReceiptEscPosJob({
       `Guest: ${order.customer.name}${order.customer.phone ? ` - ${order.customer.phone}` : ''}`,
     );
   }
+  if (branch.taxRegime === 'INDIA_GST') {
+    if (order.customerGstin) w.text(`Customer GSTIN: ${order.customerGstin}`);
+    if (order.placeOfSupplyStateCode) {
+      w.text(
+        `Place of supply: ${order.placeOfSupplyStateCode}-${indiaStateName(order.placeOfSupplyStateCode) ?? ''}`,
+      );
+    }
+  }
   w.rule();
 
   for (const item of order.items) {
@@ -204,10 +218,13 @@ export function buildReceiptEscPosJob({
       // Prices are tax-inclusive - this is a breakup of tax already inside
       // the total above, not an additional charge (see ARCHITECTURE.md).
       if (TAX_REGIME_PRESETS[branch.taxRegime].splitCgstSgst) {
-        const half =
-          Math.round((order.taxAmount / 2 + Number.EPSILON) * 100) / 100;
-        w.row('CGST (incl.)', money(half));
-        w.row('SGST (incl.)', money(order.taxAmount - half));
+        const gstLines = splitIndiaGst(order.taxAmount, {
+          branchStateCode: gstinStateCode(taxIdValue),
+          placeOfSupplyStateCode: order.placeOfSupplyStateCode,
+        });
+        for (const line of gstLines) {
+          w.row(`${line.label} (incl.)`, money(line.amount));
+        }
       } else {
         w.row(`${taxLabel} (incl.)`, money(order.taxAmount));
       }

@@ -139,3 +139,92 @@ export const fssaiSchema = z
   .refine((v) => v === "" || isValidFssai(v), "FSSAI number must be exactly 14 digits")
   .nullable()
   .optional();
+
+/** GST state / union territory codes (first two digits of a GSTIN). */
+export const INDIA_STATES: readonly { code: string; name: string }[] = [
+  { code: "01", name: "Jammu and Kashmir" },
+  { code: "02", name: "Himachal Pradesh" },
+  { code: "03", name: "Punjab" },
+  { code: "04", name: "Chandigarh" },
+  { code: "05", name: "Uttarakhand" },
+  { code: "06", name: "Haryana" },
+  { code: "07", name: "Delhi" },
+  { code: "08", name: "Rajasthan" },
+  { code: "09", name: "Uttar Pradesh" },
+  { code: "10", name: "Bihar" },
+  { code: "11", name: "Sikkim" },
+  { code: "12", name: "Arunachal Pradesh" },
+  { code: "13", name: "Nagaland" },
+  { code: "14", name: "Manipur" },
+  { code: "15", name: "Mizoram" },
+  { code: "16", name: "Tripura" },
+  { code: "17", name: "Meghalaya" },
+  { code: "18", name: "Assam" },
+  { code: "19", name: "West Bengal" },
+  { code: "20", name: "Jharkhand" },
+  { code: "21", name: "Odisha" },
+  { code: "22", name: "Chhattisgarh" },
+  { code: "23", name: "Madhya Pradesh" },
+  { code: "24", name: "Gujarat" },
+  { code: "26", name: "Dadra and Nagar Haveli and Daman and Diu" },
+  { code: "27", name: "Maharashtra" },
+  { code: "29", name: "Karnataka" },
+  { code: "30", name: "Goa" },
+  { code: "31", name: "Lakshadweep" },
+  { code: "32", name: "Kerala" },
+  { code: "33", name: "Tamil Nadu" },
+  { code: "34", name: "Puducherry" },
+  { code: "35", name: "Andaman and Nicobar Islands" },
+  { code: "36", name: "Telangana" },
+  { code: "37", name: "Andhra Pradesh" },
+  { code: "38", name: "Ladakh" },
+  { code: "97", name: "Other Territory" },
+];
+export function isIndiaStateCode(code: string): boolean {
+  return INDIA_STATES.some((s) => s.code === code);
+}
+export function indiaStateName(code: string | null | undefined): string | null {
+  return INDIA_STATES.find((s) => s.code === code)?.name ?? null;
+}
+
+/** GSTIN: 2-digit state code, PAN, entity number, "Z", check character. */
+export const GSTIN_PATTERN = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+export function isValidGstin(value: string): boolean {
+  const v = value.trim().toUpperCase();
+  return GSTIN_PATTERN.test(v) && isIndiaStateCode(v.slice(0, 2));
+}
+/** State code from a GSTIN (first two digits), or null if it is not a valid GSTIN. */
+export function gstinStateCode(gstin: string | null | undefined): string | null {
+  if (!gstin || !isValidGstin(gstin)) return null;
+  return gstin.trim().slice(0, 2);
+}
+
+export interface GstTaxLine {
+  label: "CGST" | "SGST" | "IGST";
+  amount: number;
+}
+
+/**
+ * The ONE place that decides how an India GST amount is shown: IGST (the
+ * full amount on one line) when the place of supply is set and is a
+ * different state from the branch, otherwise CGST + SGST halves. Rounding:
+ * CGST is the half rounded to paise, SGST is the remainder, so the lines
+ * always add up to the tax amount exactly. Used by both receipts (HTML and
+ * thermal) and the POS bill totals.
+ */
+export function splitIndiaGst(
+  taxAmount: number,
+  opts: { branchStateCode: string | null | undefined; placeOfSupplyStateCode?: string | null },
+): GstTaxLine[] {
+  const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+  const total = round2(taxAmount);
+  const { branchStateCode, placeOfSupplyStateCode } = opts;
+  if (placeOfSupplyStateCode && branchStateCode && placeOfSupplyStateCode !== branchStateCode) {
+    return [{ label: "IGST", amount: total }];
+  }
+  const half = round2(total / 2);
+  return [
+    { label: "CGST", amount: half },
+    { label: "SGST", amount: round2(total - half) },
+  ];
+}

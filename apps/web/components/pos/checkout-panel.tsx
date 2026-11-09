@@ -1,6 +1,14 @@
 "use client";
 
-import { kitchenProgress, type PaymentMethodDto } from "@nodedr-restaurant/types";
+import {
+  gstinStateCode,
+  INDIA_STATES,
+  isValidGstin,
+  kitchenProgress,
+  splitIndiaGst,
+  type GstTaxLine,
+  type PaymentMethodDto,
+} from "@nodedr-restaurant/types";
 import { ArrowLeft, CheckCircle2, ChefHat, Pencil, Printer } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -8,6 +16,13 @@ import { StatusNote, useNoteToast } from "@/components/ui/status-note";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { QueryError } from "@/components/ui/query-error";
 import { PaymentMethodButtons } from "@/components/pos/payment-method-buttons";
 import { CustomerPicker } from "@/components/pos/customer-picker";
@@ -92,6 +107,9 @@ export function CheckoutPanel({
   const [customer, setCustomer] = useState<Customer | null>(initialCustomer);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
+  // India GST invoice (optional): buyer GSTIN and place of supply.
+  const [customerGstin, setCustomerGstin] = useState("");
+  const [placeOfSupply, setPlaceOfSupply] = useState("");
   const checkout = useCheckoutOrder(branchId);
   const { note, clear: clearNote, toast } = useNoteToast();
   const canCancelRole = useCanCancelOrders();
@@ -158,6 +176,29 @@ export function CheckoutPanel({
   const bill: BillPreview | undefined = billQuery.data;
   const locked = (bill?.locked ?? false) || hasPayments;
   const repricing = adjustments !== settled;
+
+  const isIndiaGst = settings?.branch.taxRegime === "INDIA_GST";
+  const gstinValid = customerGstin === "" || isValidGstin(customerGstin);
+  // Sent with the printed bill and the payment; only valid values go out.
+  const gstAdj = isIndiaGst
+    ? {
+        customerGstin: customerGstin && gstinValid ? customerGstin : undefined,
+        placeOfSupplyStateCode: placeOfSupply || undefined,
+      }
+    : {};
+  const gstLines: GstTaxLine[] | undefined =
+    isIndiaGst && bill
+      ? splitIndiaGst(bill.taxAmount, {
+          branchStateCode: gstinStateCode(settings?.branch.taxId || settings?.branch.gstNumber),
+          placeOfSupplyStateCode: placeOfSupply || null,
+        })
+      : undefined;
+  const onGstinChange = (value: string) => {
+    const v = value.toUpperCase().replace(/\s/g, "");
+    setCustomerGstin(v);
+    const state = gstinStateCode(v);
+    if (state) setPlaceOfSupply(state);
+  };
 
   // A coupon is checked when applied, so the bill above only ever sees a valid
   // code (or none) and never drops the happy-hour discount on an error.
@@ -249,6 +290,7 @@ export function CheckoutPanel({
       giftCardCode: giftCardBalance !== null ? giftCardCode : undefined,
       payments,
       allowPartial: plan.partial || undefined,
+      ...gstAdj,
     };
     checkout.mutate(
       { orderId: order.id, dto: { ...dto, requestId: requestIdFor(dto) } },
@@ -273,10 +315,11 @@ export function CheckoutPanel({
     );
   };
 
-  const printBill = () => branchId && openReceiptPrint(order.id, branchId, locked ? {} : settled);
+  const printBill = () =>
+    branchId && openReceiptPrint(order.id, branchId, { ...(locked ? {} : settled), ...gstAdj });
   const printBillThermal = () =>
     printUsb.mutate(
-      { orderId: order.id, adjustments: locked ? {} : settled },
+      { orderId: order.id, adjustments: { ...(locked ? {} : settled), ...gstAdj } },
       {
         onSuccess: onPrinted,
         onError: (err) =>
@@ -460,6 +503,44 @@ export function CheckoutPanel({
       )}
 
       <CustomerPicker branchId={branchId} customer={customer} onSelect={setCustomer} />
+      {isIndiaGst && (
+        <details className="rounded-lg border border-border px-3 py-2">
+          <summary className="cursor-pointer text-sm font-medium text-foreground">
+            GST invoice (optional)
+          </summary>
+          <div className="mt-3 grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="customer-gstin">Customer GSTIN</Label>
+              <Input
+                id="customer-gstin"
+                value={customerGstin}
+                onChange={(e) => onGstinChange(e.target.value)}
+                maxLength={15}
+                placeholder="15 characters"
+                aria-invalid={!gstinValid}
+              />
+              {!gstinValid && (
+                <p className="text-xs text-destructive">Enter a valid 15-character GSTIN</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="place-of-supply">Place of supply</Label>
+              <Select value={placeOfSupply} onValueChange={(v) => setPlaceOfSupply(v ?? "")}>
+                <SelectTrigger id="place-of-supply">
+                  <SelectValue placeholder="Same as restaurant" />
+                </SelectTrigger>
+                <SelectContent>
+                  {INDIA_STATES.map((s) => (
+                    <SelectItem key={s.code} value={s.code}>
+                      {s.code} - {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </details>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">
@@ -666,7 +747,12 @@ export function CheckoutPanel({
       )}
 
       <div className="mt-auto flex flex-col gap-3 border-t border-border pt-4">
-        <BillSummary bill={bill} giftCardApplied={giftCardApplied} pending={repricing || billQuery.isFetching} />
+        <BillSummary
+          bill={bill}
+          gstLines={gstLines}
+          giftCardApplied={giftCardApplied}
+          pending={repricing || billQuery.isFetching}
+        />
 
         <div className="grid grid-cols-2 gap-2">
           <Button
@@ -714,10 +800,13 @@ export function CheckoutPanel({
 // The settlement summary: every figure on the printed bill, in the same order.
 function BillSummary({
   bill,
+  gstLines,
   giftCardApplied,
   pending,
 }: {
   bill: BillPreview | undefined;
+  /** India GST: CGST+SGST or IGST lines from splitIndiaGst, in place of one tax row. */
+  gstLines?: GstTaxLine[];
   giftCardApplied: number;
   pending: boolean;
 }) {
@@ -742,7 +831,13 @@ function BillSummary({
             accent
           />
         )}
-        <Row label="Tax (included)" value={formatCurrency(bill.taxAmount)} muted />
+        {gstLines ? (
+          gstLines.map((l) => (
+            <Row key={l.label} label={`${l.label} (included)`} value={formatCurrency(l.amount)} muted />
+          ))
+        ) : (
+          <Row label="Tax (included)" value={formatCurrency(bill.taxAmount)} muted />
+        )}
         {bill.loyaltyDiscountAmount > 0 && (
           <Row
             label={`Loyalty (${bill.loyaltyPointsRedeemed} pts)`}

@@ -1369,6 +1369,12 @@ model Order {
   couponCode    String?
   promotionName String?
 
+  // India GST invoice (2026-11-09): buyer's GSTIN and the place of supply
+  // (2-digit GST state code). A place of supply in another state than the
+  // branch GSTIN's state turns CGST+SGST into IGST - see splitIndiaGst.
+  customerGstin          String?
+  placeOfSupplyStateCode String?
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   billedAt  DateTime?

@@ -9,6 +9,7 @@ import {
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import {
+  gstinStateCode,
   canTransitionKot,
   KOT_STARTED_STATUSES,
   type BillPreviewDto,
@@ -1475,6 +1476,18 @@ export class OrdersService {
     });
     const loyaltyEarnPerCurrency = branch.restaurant.loyaltyEarnPerCurrency;
 
+    // India GST invoice details: saved with any payment (even after the bill
+    // figures are locked). A GSTIN without a place of supply implies its state.
+    const gstInvoice =
+      branch.taxRegime === 'INDIA_GST' &&
+      (dto.customerGstin !== undefined || dto.placeOfSupplyStateCode !== undefined)
+        ? {
+            customerGstin: dto.customerGstin || null,
+            placeOfSupplyStateCode:
+              dto.placeOfSupplyStateCode || gstinStateCode(dto.customerGstin),
+          }
+        : {};
+
     // A customer can be attached at billing time instead of when the order
     // was opened — walk-ins don't need a name up front, staff can add one
     // once the guest is ready to pay. Falls back to whatever was already on
@@ -1622,7 +1635,11 @@ export class OrdersService {
         if (!settlement.fullyPaid) {
           await tx.order.update({
             where: { id: orderId, status: 'OPEN' },
-            data: { ...lockedFigures, payments: { create: paymentRows } },
+            data: {
+              ...lockedFigures,
+              ...gstInvoice,
+              payments: { create: paymentRows },
+            },
           });
           return;
         }
@@ -1674,6 +1691,7 @@ export class OrdersService {
           where: { id: orderId, status: 'OPEN' },
           data: {
             ...lockedFigures,
+            ...gstInvoice,
             status: 'PAID',
             billedAt: new Date(),
             payments: { create: paymentRows },

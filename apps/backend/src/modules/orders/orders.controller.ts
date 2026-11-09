@@ -26,6 +26,7 @@ import {
   removeOrderItemSchema,
   updateOrderItemSchema,
   updateOrderSchema,
+  gstinStateCode,
   type BillPreviewDto,
   type CheckoutDto,
   type RemoveOrderItemDto,
@@ -111,6 +112,19 @@ type BillOverrides = {
   isProvisional: boolean;
 };
 
+/** GST invoice details typed on the bill before payment override the saved ones. */
+function gstFromAdj(adj: BillPreviewDto) {
+  return {
+    ...(adj.customerGstin ? { customerGstin: adj.customerGstin } : {}),
+    ...(adj.placeOfSupplyStateCode || adj.customerGstin
+      ? {
+          placeOfSupplyStateCode:
+            adj.placeOfSupplyStateCode || gstinStateCode(adj.customerGstin),
+        }
+      : {}),
+  };
+}
+
 function toEscposOrder(
   order: ReceiptData,
   overrides?: BillOverrides,
@@ -132,6 +146,8 @@ function toEscposOrder(
     loyaltyPointsRedeemed: order.loyaltyPointsRedeemed,
     loyaltyDiscountAmount: Number(order.loyaltyDiscountAmount),
     totalAmount: Number(order.totalAmount),
+    customerGstin: order.customerGstin,
+    placeOfSupplyStateCode: order.placeOfSupplyStateCode,
     ...overrides,
     items: order.items.map((item) => ({
       nameSnapshot: item.nameSnapshot,
@@ -455,6 +471,7 @@ export class OrdersController {
       },
       order: {
         ...toEscposOrder(order, overrides),
+        ...gstFromAdj(adj),
         verifactu: overrides.isProvisional
           ? null
           : await this.verifactu.qrForOrder(order.id),
@@ -636,6 +653,7 @@ export class OrdersController {
       },
       order: {
         ...toEscposOrder(order, overrides),
+        ...gstFromAdj(adj),
         verifactu: overrides.isProvisional
           ? null
           : await this.verifactu.qrForOrder(order.id),

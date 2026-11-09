@@ -19,6 +19,9 @@ import {
   resolveTaxIdLabel,
   resolveTaxLabel,
   TAX_REGIME_PRESETS,
+  gstinStateCode,
+  indiaStateName,
+  splitIndiaGst,
   type TaxMode,
   type TaxRegime,
 } from '@nodedr-restaurant/types';
@@ -62,6 +65,9 @@ interface ReceiptOrder {
   /** Applied so far / still owed; printed when set. */
   amountPaid?: number;
   balanceDue?: number;
+  /** India GST invoice: buyer GSTIN and place of supply (state code). */
+  customerGstin?: string | null;
+  placeOfSupplyStateCode?: string | null;
   items: {
     nameSnapshot: string;
     quantity: number;
@@ -171,10 +177,13 @@ export function buildReceiptHtml({
       // Prices are tax-inclusive (see ARCHITECTURE.md) — this is a breakup
       // of tax already inside the total above, not an additional charge.
       if (TAX_REGIME_PRESETS[branch.taxRegime].splitCgstSgst) {
-        const half =
-          Math.round((order.taxAmount / 2 + Number.EPSILON) * 100) / 100;
-        totalRows.push(['CGST (incl.)', money(half)]);
-        totalRows.push(['SGST (incl.)', money(order.taxAmount - half)]);
+        const gstLines = splitIndiaGst(order.taxAmount, {
+          branchStateCode: gstinStateCode(taxIdValue),
+          placeOfSupplyStateCode: order.placeOfSupplyStateCode,
+        });
+        for (const line of gstLines) {
+          totalRows.push([`${line.label} (incl.)`, money(line.amount)]);
+        }
       } else {
         totalRows.push([`${taxLabel} (incl.)`, money(order.taxAmount)]);
       }
@@ -260,6 +269,8 @@ export function buildReceiptHtml({
       Order: #${esc(order.orderNumber)} · ${esc(order.type.replace('_', ' '))}
       ${order.table ? `<br>Table: ${esc(order.table.label)}` : ''}
       ${order.customer ? `<br>Guest: ${esc(order.customer.name)}${order.customer.phone ? ` · ${esc(order.customer.phone)}` : ''}` : ''}
+      ${isIndia && order.customerGstin ? `<br>Customer GSTIN: ${esc(order.customerGstin)}` : ''}
+      ${isIndia && order.placeOfSupplyStateCode ? `<br>Place of supply: ${esc(order.placeOfSupplyStateCode)}-${esc(indiaStateName(order.placeOfSupplyStateCode) ?? '')}` : ''}
     </p>
     <hr class="rule">
     <table>

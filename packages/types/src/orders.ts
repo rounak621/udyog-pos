@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isIndiaStateCode, isValidGstin } from "./tax";
 
 export const orderTypeSchema = z.enum([
   "DINE_IN",
@@ -147,6 +148,18 @@ const billAdjustmentFields = {
   tipAmount: z.coerce.number().min(0).optional(),
   loyaltyPointsToRedeem: z.coerce.number().int().min(0).optional(),
   couponCode: z.string().trim().min(3).max(24).optional(),
+  // India GST invoice details (only used when the branch regime is INDIA_GST).
+  customerGstin: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .refine((v) => v === "" || isValidGstin(v), "Enter a valid 15-character GSTIN")
+    .optional(),
+  placeOfSupplyStateCode: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || isIndiaStateCode(v), "Unknown state code")
+    .optional(),
 };
 
 export const billPreviewSchema = z.object({
