@@ -43,3 +43,11 @@ UDYOG POS = restaurant POS, white-labelled from an AGPL-3.0 open-source repo, ow
 - Solid tint tokens (light, dark and kiosk): primary-soft, success-soft, warning-soft, destructive-soft, info-soft. Solid hover shades: primary-hover, destructive-hover. QR box (always white so codes scan): qr-surface, qr-foreground, qr-muted-foreground. Use them as Tailwind classes, e.g. bg-primary-soft, ring-destructive-soft, hover:bg-primary-hover.
 - Neutral cases use the existing muted, secondary, border and muted-foreground tokens.
 - No slash-opacity colour classes (bg-x/10, border-x/50, text-x/70 ...) except modal backdrops (fixed/absolute inset-0 overlays). Plain opacity-* for disabled states and animations is fine.
+
+## India decisions
+- New fields (all nullable): MenuItem.hsnSac, Branch.defaultHsnSac, OrderItem.hsnSacSnapshot (item code, else branch default, at order time), Branch.fssaiNumber, Order.customerGstin, Order.placeOfSupplyStateCode. Migrations: 20261109000000_india_hsn_sac, 20261109010000_india_fssai, 20261109020000_india_igst.
+- India fields are shown and printed only when Branch.taxRegime is INDIA_GST.
+- Branch state code is derived from the branch GSTIN (taxId, else gstNumber, first 2 digits); there is no stateCode field. The CRM Customer has no GSTIN field; the buyer GSTIN lives on the Order.
+- CGST/SGST vs IGST is decided in ONE place: splitIndiaGst in packages/types/src/tax.ts (with isValidGstin, gstinStateCode, isValidHsnSac, isValidFssai, INDIA_STATES). Receipts (HTML and thermal) and the POS bill totals call it; do not duplicate the split.
+- Spain VERI*FACTU is hidden unless the branch is Spain (apps/web/lib/region.ts isSpainBranch: country ES or regime ES_IVA); its page redirects to /settings otherwise. The code is kept.
+- Support link: NEXT_PUBLIC_SUPPORT_EMAIL (build-time); unset = no "Help & support" item.
