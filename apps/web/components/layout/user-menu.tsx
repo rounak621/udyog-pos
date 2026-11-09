@@ -1,7 +1,7 @@
 "use client";
 
 import type { SessionUser } from "@nodedr-restaurant/types";
-import { LogOut, Moon, Sun } from "lucide-react";
+import { LifeBuoy, LogOut, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -14,6 +14,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLogout } from "@/hooks/use-auth";
+
+// Inlined at build time (NEXT_PUBLIC_). Empty or unset = no support item.
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() ?? "";
 
 function initials(name?: string) {
   if (!name) return "?";
@@ -57,6 +60,16 @@ export function UserMenu({ user }: { user?: SessionUser }) {
             <p className="text-xs font-normal text-muted-foreground">{user?.roleName}</p>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          {SUPPORT_EMAIL && (
+            <DropdownMenuItem
+              onClick={() => {
+                window.location.href = `mailto:${SUPPORT_EMAIL}`;
+              }}
+            >
+              <LifeBuoy className="h-4 w-4" />
+              Help &amp; support
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onClick={() => logout.mutate(undefined, { onSuccess: () => router.push("/login") })}
           >
