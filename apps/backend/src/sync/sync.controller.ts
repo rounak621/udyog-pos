@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Auth } from '../common/decorators/auth.decorator';
+import { PlatformAdmin } from '../common/decorators/platform-admin.decorator';
 import { SyncKeyGuard } from './sync-key.guard';
 import { SyncChange, SyncService } from './sync.service';
 
@@ -50,13 +50,13 @@ export class SyncPeerController {
 export class SyncController {
   constructor(private readonly sync: SyncService) {}
 
-  @Auth('settings.manage')
+  @PlatformAdmin()
   @Get('status')
   status() {
     return this.sync.publicStatus();
   }
 
-  @Auth('settings.manage')
+  @PlatformAdmin()
   @Post('test')
   async test(@Body() body: { serverUrl?: string; apiKey?: string }) {
     try {
@@ -68,7 +68,7 @@ export class SyncController {
     }
   }
 
-  @Auth('settings.manage')
+  @PlatformAdmin()
   @Put('settings')
   async enable(
     @Body() body: { serverUrl?: string; apiKey?: string; mode?: string },
@@ -85,7 +85,7 @@ export class SyncController {
     return this.sync.publicStatus();
   }
 
-  @Auth('settings.manage')
+  @PlatformAdmin()
   @Post('run')
   async run() {
     try {
@@ -98,7 +98,7 @@ export class SyncController {
     }
   }
 
-  @Auth('settings.manage')
+  @PlatformAdmin()
   @Post('disable')
   async disable() {
     await this.sync.disable();

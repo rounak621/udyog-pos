@@ -6,8 +6,11 @@ import helmet from 'helmet';
 import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { JwtService } from '@nestjs/jwt';
+import type { NextFunction, Request, Response } from 'express';
 import { AppModule } from './app.module';
 import { uploadsDir } from './common/upload/image-upload.config';
+import { PrismaService } from './prisma/prisma.service';
 
 // Known example/placeholder secrets that appear verbatim in this repo's own
 // .env.example, docker-compose.yml, and the CasaOS/ZimaOS app-store
@@ -129,6 +132,33 @@ async function bootstrap() {
       .addCookieAuth('udyog_session')
       .build();
     const document = SwaggerModule.createDocument(app, config);
+    // In production the API map is for UDYOG platform admins only: check the
+    // session cookie and the user's isPlatformAdmin flag before serving it.
+    if (process.env.NODE_ENV === 'production') {
+      const jwt = app.get(JwtService, { strict: false });
+      const prisma = app.get(PrismaService, { strict: false });
+      const platformAdminOnly = async (
+        req: Request,
+        res: Response,
+        next: NextFunction,
+      ) => {
+        try {
+          const token = (req.cookies as Record<string, string> | undefined)?.[
+            'udyog_session'
+          ];
+          const { sub } = await jwt.verifyAsync<{ sub: string }>(token ?? '');
+          const user = await prisma.user.findUnique({
+            where: { id: sub },
+            select: { isActive: true, isPlatformAdmin: true },
+          });
+          if (user?.isActive && user.isPlatformAdmin) return next();
+        } catch {
+          // fall through to 403
+        }
+        res.status(403).json({ message: 'Platform administrators only' });
+      };
+      app.use(['/api/docs', '/api/docs-json'], platformAdminOnly);
+    }
     SwaggerModule.setup('api/docs', app, document);
   }
 

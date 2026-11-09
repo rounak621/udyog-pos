@@ -251,6 +251,10 @@ model User {
   twoFactorEnabled        Boolean  @default(false)
   twoFactorRecoveryHashes String[] @default([]) // bcrypt hashes of unused one-time recovery codes
   twoFactorLastStep       Int? // last accepted TOTP step: a code works once
+  // UDYOG platform staff only: unlocks instance-wide features (backup,
+  // sync, updates). Not part of any role or permission, not settable via
+  // any API; granted only with scripts/make-platform-admin.ts.
+  isPlatformAdmin         Boolean  @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

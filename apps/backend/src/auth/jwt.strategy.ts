@@ -47,6 +47,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       roleId: user.roleId,
       roleName: user.role.name,
       permissions: user.role.permissions.map((rp) => rp.permission.key),
+      isPlatformAdmin: user.isPlatformAdmin,
     };
   }
 }

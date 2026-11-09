@@ -51,3 +51,6 @@ UDYOG POS = restaurant POS, white-labelled from an AGPL-3.0 open-source repo, ow
 - CGST/SGST vs IGST is decided in ONE place: splitIndiaGst in packages/types/src/tax.ts (with isValidGstin, gstinStateCode, isValidHsnSac, isValidFssai, INDIA_STATES). Receipts (HTML and thermal) and the POS bill totals call it; do not duplicate the split.
 - Spain VERI*FACTU is hidden unless the branch is Spain (apps/web/lib/region.ts isSpainBranch: country ES or regime ES_IVA); its page redirects to /settings otherwise. The code is kept.
 - Support link: NEXT_PUBLIC_SUPPORT_EMAIL (build-time); unset = no "Help & support" item.
+
+## Platform admin
+- Grant (no API, no env var): `docker exec nodedr-restaurant-backend node dist/scripts/make-platform-admin.js you@example.com` (dev: `pnpm --filter @nodedr-restaurant/backend make-platform-admin you@example.com`). Refuses unless exactly one user has that email.

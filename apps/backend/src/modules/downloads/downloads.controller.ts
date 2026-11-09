@@ -2,6 +2,7 @@ import { Controller, Get, Param, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
+import { PlatformAdmin } from '../../common/decorators/platform-admin.decorator';
 import { DownloadsService } from './downloads.service';
 
 // Deliberately unauthenticated and public — these are the marketing site's
@@ -11,10 +12,9 @@ import { DownloadsService } from './downloads.service';
 export class DownloadsController {
   constructor(private readonly downloads: DownloadsService) {}
 
-  // A public, honest counter — never pre-seeded, only ever incremented by
-  // a real click through /go/:channel below. See docs/COMPLIANCE-INDIA.md
-  // for why this deliberately avoids the "fake urgency / fabricated social
-  // proof" dark pattern the CCPA's 2023 guidelines prohibit.
+  // Click counts are platform data (all installs on this server), so only
+  // UDYOG platform admins can read them. The redirect below stays public.
+  @PlatformAdmin()
   @Get('stats')
   stats() {
     return this.downloads.stats();

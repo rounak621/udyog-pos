@@ -30,6 +30,8 @@ export const sessionUserSchema = z.object({
   roleId: z.string(),
   roleName: z.string(),
   permissions: z.array(z.string()),
+  // UDYOG platform staff (instance-wide features). Never from a role.
+  isPlatformAdmin: z.boolean(),
 });
 export type SessionUser = z.infer<typeof sessionUserSchema>;
 

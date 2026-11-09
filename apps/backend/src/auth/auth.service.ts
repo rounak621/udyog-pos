@@ -31,6 +31,7 @@ export class AuthService {
     restaurantId: string;
     name: string;
     roleId: string;
+    isPlatformAdmin: boolean;
     role: { name: string; permissions: { permission: { key: string } }[] };
   }): SessionUser {
     return {
@@ -40,6 +41,7 @@ export class AuthService {
       roleId: user.roleId,
       roleName: user.role.name,
       permissions: user.role.permissions.map((rp) => rp.permission.key),
+      isPlatformAdmin: user.isPlatformAdmin,
     };
   }
 

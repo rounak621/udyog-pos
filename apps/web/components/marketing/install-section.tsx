@@ -98,21 +98,24 @@ export function InstallSection() {
         ))}
       </RevealGroup>
 
-      <Reveal delay={0.15} className="mt-14 flex flex-col items-center gap-1 text-center">
-        <p className="text-4xl font-semibold tabular-nums text-foreground sm:text-5xl">
-          <AnimatedCounter value={total} />
-        </p>
-        <p className="text-sm text-muted-foreground">
-          real link click-throughs tracked since launch &mdash; no pre-seeded number, see{" "}
-          <a
-            href="/api/v1/downloads/stats"
-            className="underline underline-offset-4 hover:text-foreground"
-          >
-            the live counter API
-          </a>
-          .
-        </p>
-      </Reveal>
+      {/* Download counts are platform-admin data; hidden for everyone else. */}
+      {stats && (
+        <Reveal delay={0.15} className="mt-14 flex flex-col items-center gap-1 text-center">
+          <p className="text-4xl font-semibold tabular-nums text-foreground sm:text-5xl">
+            <AnimatedCounter value={total} />
+          </p>
+          <p className="text-sm text-muted-foreground">
+            real link click-throughs tracked since launch &mdash; no pre-seeded number, see{" "}
+            <a
+              href="/api/v1/downloads/stats"
+              className="underline underline-offset-4 hover:text-foreground"
+            >
+              the live counter API
+            </a>
+            .
+          </p>
+        </Reveal>
+      )}
     </section>
   );
 }

@@ -29,8 +29,9 @@ export function useNavBadges(): NavBadges {
   const { data: me } = useCurrentUser();
   const user = me?.user;
 
-  const canUpdate = hasPermission(user, "system.update");
-  const canBackup = hasPermission(user, "backup.manage");
+  // Updates and backups are instance-wide: platform admins only.
+  const canUpdate = user?.isPlatformAdmin === true && hasPermission(user, "system.update");
+  const canBackup = user?.isPlatformAdmin === true && hasPermission(user, "backup.manage");
   const canInventory = hasPermission(user, "inventory.manage");
 
   const { data: notifications } = useNotifications();

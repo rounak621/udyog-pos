@@ -64,6 +64,8 @@ export class StaffApiKeyGuard implements CanActivate {
       roleId: key.user.roleId,
       roleName: key.user.role.name,
       permissions: key.user.role.permissions.map((rp) => rp.permission.key),
+      // An API key never carries platform-admin rights.
+      isPlatformAdmin: false,
     };
     request.user = sessionUser;
 

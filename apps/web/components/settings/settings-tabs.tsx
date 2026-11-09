@@ -15,6 +15,8 @@ interface SettingsTab {
   href: string;
   /** Omit to show the tab to anyone who can reach /settings at all. */
   permission?: string;
+  /** Only shown to UDYOG platform admins (instance-wide features). */
+  platformAdminOnly?: boolean;
   /** Only shown for Spain branches (see isSpainBranch). */
   spainOnly?: boolean;
 }
@@ -24,9 +26,9 @@ const TABS: SettingsTab[] = [
   { label: "Staff", href: "/settings/staff", permission: "users.manage" },
   { label: "Roles", href: "/settings/roles", permission: "roles.manage" },
   { label: "Audit Log", href: "/settings/audit-log", permission: "audit_log.view" },
-  { label: "Backup", href: "/settings/backup", permission: "backup.manage" },
-  { label: "Updates", href: "/settings/updates", permission: "system.update" },
-  { label: "Server Sync", href: "/settings/sync", permission: "settings.manage" },
+  { label: "Backup", href: "/settings/backup", permission: "backup.manage", platformAdminOnly: true },
+  { label: "Updates", href: "/settings/updates", permission: "system.update", platformAdminOnly: true },
+  { label: "Server Sync", href: "/settings/sync", permission: "settings.manage", platformAdminOnly: true },
   { label: "API Keys", href: "/settings/api-keys" },
   { label: "Security", href: "/settings/security" },
   { label: "Webhooks", href: "/settings/webhooks", permission: "settings.manage" },
@@ -44,6 +46,7 @@ export function SettingsTabs() {
   const visibleTabs = TABS.filter(
     (tab) =>
       (!tab.permission || hasPermission(user, tab.permission)) &&
+      (!tab.platformAdminOnly || user?.isPlatformAdmin === true) &&
       (!tab.spainOnly || isSpainBranch(branch)),
   );
 

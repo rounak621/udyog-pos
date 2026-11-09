@@ -737,20 +737,14 @@ export class BackupService {
     }
   }
 
-  // Instance-wide event -> notify every OWNER-role user across every
-  // restaurant on this instance (not just the acting user's own
-  // restaurant), because a backup/restore affects the entire shared
-  // Postgres instance, not one tenant. `Notification` rows are
-  // branch-scoped (schema.prisma), so each Owner is attached to their
-  // oldest (first-created) branch — a reasonable stand-in "primary" branch
-  // since there's no meaningful branch to prefer for an instance-wide
-  // event, and an Owner of a typical single-branch self-hosted deployment
-  // only has exactly one branch anyway. An Owner with no branch assignment
-  // (shouldn't normally happen — registration always assigns one) is
+  // Instance-wide event -> notify the UDYOG platform admins only. A
+  // backup/restore covers every restaurant on this server, so restaurant
+  // owners must not see it. `Notification` rows are branch-scoped, so each
+  // admin is attached to their oldest branch; an admin with no branch is
   // skipped rather than failing the whole operation.
   private async notifyOwners(payload: NotifyPayload) {
     const owners = await this.prisma.user.findMany({
-      where: { role: { name: 'OWNER' }, isActive: true },
+      where: { isPlatformAdmin: true, isActive: true },
       select: {
         id: true,
         branches: {
