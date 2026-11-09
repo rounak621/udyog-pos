@@ -44,7 +44,8 @@ export class PublicMenuService {
       orderBy: { sortOrder: 'asc' },
       include: {
         items: {
-          where: { isActive: true },
+          // branchId too: never list an item from another branch/tenant.
+          where: { isActive: true, branchId },
           orderBy: { sortOrder: 'asc' },
           select: {
             id: true,

@@ -98,6 +98,11 @@ export class MenuService {
   async createItem(branchId: string, dto: MenuItemDto) {
     const { modifierGroupIds, ...rest } = dto;
     await this.assertModifierGroupsInBranch(branchId, modifierGroupIds);
+    await this.assertCategoryAndStationInBranch(
+      branchId,
+      dto.categoryId,
+      dto.stationId,
+    );
     return this.prisma.menuItem.create({
       data: {
         ...rest,
@@ -124,6 +129,11 @@ export class MenuService {
     if (modifierGroupIds) {
       await this.assertModifierGroupsInBranch(branchId, modifierGroupIds);
     }
+    await this.assertCategoryAndStationInBranch(
+      branchId,
+      dto.categoryId,
+      dto.stationId,
+    );
 
     const updated = await this.prisma.$transaction(async (tx) => {
       if (modifierGroupIds) {
@@ -159,6 +169,36 @@ export class MenuService {
     });
 
     return updated;
+  }
+
+  // A client-supplied categoryId/stationId from another branch or restaurant
+  // must never be linked to this branch's item: the item would then show up
+  // in that other tenant's category (QR menu, kiosk, KDS).
+  private async assertCategoryAndStationInBranch(
+    branchId: string,
+    categoryId?: string,
+    stationId?: string | null,
+  ) {
+    if (categoryId) {
+      const category = await this.prisma.menuCategory.findFirst({
+        where: { id: categoryId, branchId },
+        select: { id: true },
+      });
+      if (!category) {
+        throw new BadRequestException('Category is invalid for this branch');
+      }
+    }
+    if (stationId) {
+      const station = await this.prisma.kitchenStation.findFirst({
+        where: { id: stationId, branchId },
+        select: { id: true },
+      });
+      if (!station) {
+        throw new BadRequestException(
+          'Kitchen station is invalid for this branch',
+        );
+      }
+    }
   }
 
   private async assertModifierGroupsInBranch(
