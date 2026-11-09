@@ -37,3 +37,9 @@ UDYOG POS = restaurant POS, white-labelled from an AGPL-3.0 open-source repo, ow
 - Git email: rounakchoudharyunknown@gmail.com.
 - Final report format: short. Files changed (git show --stat HEAD, stat only, no full diffs), results of checks, git log -1, git ls-remote origin. Do not claim "pushed" without showing ls-remote output.
 - Shell is zsh: quote globs ('*.ts'). Always state which folder a command runs in.
+
+## Theme tokens
+- UI primary is orange #FF7A1A (apps/web/app/globals.css: --primary, --ring, sidebar primary, themeColor and manifests). The logo keeps its own orange (#FF6F00); do not recolour the logo files.
+- Solid tint tokens (light, dark and kiosk): primary-soft, success-soft, warning-soft, destructive-soft, info-soft. Solid hover shades: primary-hover, destructive-hover. QR box (always white so codes scan): qr-surface, qr-foreground, qr-muted-foreground. Use them as Tailwind classes, e.g. bg-primary-soft, ring-destructive-soft, hover:bg-primary-hover.
+- Neutral cases use the existing muted, secondary, border and muted-foreground tokens.
+- No slash-opacity colour classes (bg-x/10, border-x/50, text-x/70 ...) except modal backdrops (fixed/absolute inset-0 overlays). Plain opacity-* for disabled states and animations is fine.
