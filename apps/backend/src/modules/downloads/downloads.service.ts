@@ -7,22 +7,27 @@ import { PrismaService } from '../../prisma/prisma.service';
 // URL), so this can never become an open redirect — see the security
 // hardening report's "unsafe URL handling / open redirects" check, which
 // this is deliberately built to keep passing.
-const DOWNLOAD_CHANNELS: Record<string, string> = {
-  github: 'https://github.com/Raktim94/nodedr-restaurant-pos',
-  'install-script':
-    'https://raw.githubusercontent.com/Raktim94/nodedr-restaurant-pos/master/install.sh',
-  docker: 'https://github.com/Raktim94/nodedr-restaurant-pos#one-click-install',
-  casaos: 'https://github.com/IceWhaleTech/CasaOS-AppStore',
-};
+// The base comes from DOWNLOADS_BASE_URL (operator-set env, empty by
+// default); with it unset there are no channels at all.
+function downloadChannels(): Record<string, string> {
+  const base = (process.env.DOWNLOADS_BASE_URL ?? '').trim().replace(/\/$/, '');
+  if (!base) return {};
+  return {
+    github: base,
+    'install-script': `${base}/raw/master/install.sh`,
+    docker: `${base}#one-click-install`,
+    casaos: 'https://github.com/IceWhaleTech/CasaOS-AppStore',
+  };
+}
 
-export type DownloadChannel = keyof typeof DOWNLOAD_CHANNELS;
+export type DownloadChannel = string;
 
 @Injectable()
 export class DownloadsService {
   constructor(private readonly prisma: PrismaService) {}
 
   resolveChannel(channel: string): string {
-    const url = DOWNLOAD_CHANNELS[channel];
+    const url = downloadChannels()[channel];
     if (!url) throw new NotFoundException('Unknown download channel');
     return url;
   }
@@ -38,6 +43,8 @@ export class DownloadsService {
   }
 
   async stats(): Promise<{ channel: string; count: number }[]> {
+    const channels = downloadChannels();
+    if (Object.keys(channels).length === 0) return [];
     const rows = await this.prisma.downloadStat.findMany({
       orderBy: { channel: 'asc' },
     });
@@ -45,7 +52,7 @@ export class DownloadsService {
     // an honest, complete picture rather than only rows that happen to
     // exist in the DB.
     const byChannel = new Map(rows.map((r) => [r.channel, r.count]));
-    return Object.keys(DOWNLOAD_CHANNELS).map((channel) => ({
+    return Object.keys(channels).map((channel) => ({
       channel,
       count: byChannel.get(channel) ?? 0,
     }));

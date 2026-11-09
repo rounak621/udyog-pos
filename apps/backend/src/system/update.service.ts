@@ -14,9 +14,19 @@ export interface VersionInfo {
   building: boolean;
   releaseUrl: string | null;
   checkedAt: string;
+  // True when the update check is switched off (the default).
+  disabled?: boolean;
 }
 
-const GITHUB_REPO = 'Raktim94/nodedr-restaurant-pos';
+// Off by default: no network call unless UPDATE_CHECK_ENABLED=true AND
+// UPDATE_REPO (owner/repo) is set. UPDATE_IMAGE_REPO (owner/image on GHCR) is
+// optional; without it the image-published check is skipped.
+function updateConfig(): { repo: string; imageRepo: string } | null {
+  const enabled = (process.env.UPDATE_CHECK_ENABLED ?? '').trim() === 'true';
+  const repo = (process.env.UPDATE_REPO ?? '').trim();
+  if (!enabled || !/^[\w.-]+\/[\w.-]+$/.test(repo)) return null;
+  return { repo, imageRepo: (process.env.UPDATE_IMAGE_REPO ?? '').trim() };
+}
 // Avoid hammering GitHub's unauthenticated rate limit (60 req/hr per IP,
 // shared across every self-hosted install behind the same egress IP in the
 // worst case) — a check this infrequent is still fast enough to surface a
@@ -39,9 +49,21 @@ export class UpdateService {
     }
 
     const currentVersion = (process.env.APP_VERSION ?? '').trim() || 'dev';
+    const cfg = updateConfig();
+    if (!cfg) {
+      return {
+        currentVersion,
+        latestVersion: null,
+        updateAvailable: false,
+        building: false,
+        releaseUrl: null,
+        checkedAt: new Date().toISOString(),
+        disabled: true,
+      };
+    }
     let latestVersion: string | null = null;
     try {
-      latestVersion = await this.fetchLatestTag();
+      latestVersion = await this.fetchLatestTag(cfg.repo);
     } catch (err) {
       this.logger.warn(
         `update check failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -49,8 +71,9 @@ export class UpdateService {
     }
 
     let imagePublished = true;
-    if (latestVersion && process.env.UPDATER_URL) {
-      imagePublished = (await this.imageTagExists(latestVersion)) !== false;
+    if (latestVersion && process.env.UPDATER_URL && cfg.imageRepo) {
+      imagePublished =
+        (await this.imageTagExists(cfg.imageRepo, latestVersion)) !== false;
     }
 
     const newer =
@@ -64,7 +87,7 @@ export class UpdateService {
       updateAvailable: newer && imagePublished,
       building: newer && !imagePublished,
       releaseUrl: latestVersion
-        ? `https://github.com/${GITHUB_REPO}/releases/tag/${latestVersion}`
+        ? `https://github.com/${cfg.repo}/releases/tag/${latestVersion}`
         : null,
       checkedAt: new Date().toISOString(),
     };
@@ -157,9 +180,11 @@ export class UpdateService {
   // CI publishes the image shortly after a tag appears; updating inside that
   // window would pull nothing. Anonymous GHCR manifest check — anything other
   // than a clear 404 means "can't tell", and the tag is trusted.
-  private async imageTagExists(tag: string): Promise<boolean | null> {
+  private async imageTagExists(
+    repo: string,
+    tag: string,
+  ): Promise<boolean | null> {
     try {
-      const repo = 'raktim94/nodedr-restaurant-pos-backend';
       const version = tag.replace(/^v/i, '');
       const tokRes = await fetch(
         `https://ghcr.io/token?scope=repository:${repo}:pull`,
@@ -186,9 +211,9 @@ export class UpdateService {
     }
   }
 
-  private async fetchLatestTag(): Promise<string | null> {
+  private async fetchLatestTag(repo: string): Promise<string | null> {
     const res = await fetch(
-      `https://api.github.com/repos/${GITHUB_REPO}/tags?per_page=1`,
+      `https://api.github.com/repos/${repo}/tags?per_page=1`,
       {
         headers: {
           Accept: 'application/vnd.github+json',

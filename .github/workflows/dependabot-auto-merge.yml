@@ -5,8 +5,7 @@ name: Dependabot security auto-merge
 # check, or a major bump is left open for manual review. Nothing from the PR is
 # checked out or executed here.
 on:
-  pull_request_target:
-    types: [opened, reopened, synchronize]
+  workflow_dispatch:
 
 permissions:
   contents: write

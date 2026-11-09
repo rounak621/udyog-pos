@@ -6,15 +6,6 @@ name: Install smoke test
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17 4 * * 1"
-  push:
-    branches: [master]
-    paths:
-      - "scripts/quickstart.*"
-      - "install.sh"
-      - "docker-compose.yml"
-      - ".github/workflows/install-smoke.yml"
 
 permissions:
   contents: read

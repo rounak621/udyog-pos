@@ -20,6 +20,13 @@ const TOKEN = process.env.UPDATER_TOKEN || '';
 const TARGETS = (process.env.TARGET_CONTAINERS || 'nodedr-restaurant-backend,nodedr-restaurant-web').split(',').map((s) => s.trim()).filter(Boolean);
 const PORT = Number(process.env.PORT || 8080);
 const VERSION_RE = /^\d+\.\d+\.\d+$/;
+// Image repository per container, from env only (no default):
+// UPDATER_IMAGE_REPOS="container=registry/owner/image,container2=registry/owner/image2"
+const IMAGE_REPOS = Object.fromEntries(
+  (process.env.UPDATER_IMAGE_REPOS || '').split(',').map((s) => s.trim()).filter(Boolean)
+    .map((pair) => { const i = pair.indexOf('='); return [pair.slice(0, i).trim(), pair.slice(i + 1).trim()]; })
+    .filter(([k, v]) => k && v),
+);
 
 const status = { state: 'idle', version: null, error: null, step: null };
 
@@ -48,7 +55,7 @@ const json = async (m, p, b) => { const t = await docker(m, p, b); return t ? JS
 const enc = encodeURIComponent;
 
 function splitImage(ref) {
-  // "ghcr.io/raktim94/nodedr-restaurant-pos-backend:1.4.0" -> repo + tag (a registry port
+  // "ghcr.io/owner/image:1.4.0" -> repo + tag (a registry port
   // colon is before the last slash, so only a colon after it is a tag).
   const slash = ref.lastIndexOf('/');
   const colon = ref.indexOf(':', slash + 1);
@@ -113,7 +120,9 @@ async function run(version) {
     const plan = [];
     for (const name of TARGETS) {
       const info = await json('GET', `/containers/${enc(name)}/json`);
-      const { repo, tag } = splitImage(info.Config.Image);
+      const { tag } = splitImage(info.Config.Image);
+      const repo = IMAGE_REPOS[name];
+      if (!repo) throw new Error(`no image repo configured for ${name} (set UPDATER_IMAGE_REPOS)`);
       plan.push({ name, repo, from: tag, to: version });
     }
     for (const p of plan) await pull(p.repo, p.to);

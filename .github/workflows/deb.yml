@@ -6,11 +6,6 @@ name: Debian package
 # GitHub release v<version>.
 
 on:
-  pull_request:
-    paths: ["packaging/deb/**", ".github/workflows/deb.yml"]
-  push:
-    branches: [master]
-    paths: ["packaging/deb/**", ".github/workflows/deb.yml"]
   workflow_dispatch:
     inputs:
       version:

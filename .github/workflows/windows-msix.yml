@@ -9,14 +9,6 @@ name: Windows MSIX build
 # hardware).
 
 on:
-  push:
-    branches: [master]
-    paths:
-      - 'windows/**'
-      - '.github/workflows/windows-msix.yml'
-  pull_request:
-    paths:
-      - 'windows/**'
   workflow_dispatch: {}
 
 jobs:

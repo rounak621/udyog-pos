@@ -26,14 +26,6 @@ name: Publish Docker images
 # version tag (and every install pinned to it) points at. A version tag (vX.Y.Z) or a manual run with a
 # version publishes :<version> and :latest.
 on:
-  push:
-    tags: ["v*"]
-    branches: [master]
-    paths:
-      - "apps/backend/**"
-      - "apps/web/**"
-      - "packages/types/**"
-      - ".github/workflows/docker-publish.yml"
   workflow_dispatch:
     inputs:
       version:
