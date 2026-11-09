@@ -51,29 +51,28 @@
 }
 
 :root {
-  /* Nodedr OrderRestro — light palette. See DESIGN_SYSTEM.md for rationale
-     (wine/burgundy primary is the one deliberate accent choice). */
+  /* UDYOG POS — light palette. Primary is the UDYOG web app orange (#FF7A1A). */
   --background: #FBF9F8;
   --foreground: #111827;
   --card: #FFFFFF;
   --card-foreground: #111827;
   --popover: #FFFFFF;
   --popover-foreground: #111827;
-  --primary: #9F1239;
+  --primary: #FF7A1A;
   --primary-foreground: #FFFFFF;
   --secondary: #F5F1F0;
   --secondary-foreground: #111827;
   --muted: #F5F1F0;
   --muted-foreground: #6B7280;
-  --accent: #FDF2F4;
-  --accent-foreground: #9F1239;
+  --accent: #FFF1E6;
+  --accent-foreground: #C2410C;
   --destructive: #EF4444;
   --success: #22C55E;
   --warning: #F59E0B;
   --border: #ECE6E4;
   --input: #E4DCDA;
-  --ring: #9F1239;
-  --chart-1: #9F1239;
+  --ring: #FF7A1A;
+  --chart-1: #FF7A1A;
   --chart-2: #22C55E;
   --chart-3: #F59E0B;
   --chart-4: #6366F1;
@@ -81,12 +80,12 @@
   --radius: 1rem;
   --sidebar: #FFFDFC;
   --sidebar-foreground: #111827;
-  --sidebar-primary: #9F1239;
+  --sidebar-primary: #FF7A1A;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #FDF2F4;
-  --sidebar-accent-foreground: #9F1239;
+  --sidebar-accent: #FFF1E6;
+  --sidebar-accent-foreground: #C2410C;
   --sidebar-border: #ECE6E4;
-  --sidebar-ring: #9F1239;
+  --sidebar-ring: #FF7A1A;
 }
 
 .dark {
@@ -96,33 +95,33 @@
   --card-foreground: #F4F4F5;
   --popover: #151517;
   --popover-foreground: #F4F4F5;
-  --primary: #FB7185;
-  --primary-foreground: #1F0A0F;
+  --primary: #FF7A1A;
+  --primary-foreground: #FFFFFF;
   --secondary: #1D1D20;
   --secondary-foreground: #F4F4F5;
   --muted: #1D1D20;
   --muted-foreground: #9CA3AF;
-  --accent: #2A151A;
-  --accent-foreground: #FB7185;
+  --accent: #2A1A0E;
+  --accent-foreground: #FF7A1A;
   --destructive: #F87171;
   --success: #34D399;
   --warning: #FBBF24;
   --border: #26262A;
   --input: #26262A;
-  --ring: #FB7185;
-  --chart-1: #FB7185;
+  --ring: #FF7A1A;
+  --chart-1: #FF7A1A;
   --chart-2: #34D399;
   --chart-3: #FBBF24;
   --chart-4: #818CF8;
   --chart-5: #9CA3AF;
   --sidebar: #111113;
   --sidebar-foreground: #F4F4F5;
-  --sidebar-primary: #FB7185;
-  --sidebar-primary-foreground: #1F0A0F;
-  --sidebar-accent: #2A151A;
-  --sidebar-accent-foreground: #FB7185;
+  --sidebar-primary: #FF7A1A;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #2A1A0E;
+  --sidebar-accent-foreground: #FF7A1A;
   --sidebar-border: #26262A;
-  --sidebar-ring: #FB7185;
+  --sidebar-ring: #FF7A1A;
 }
 
 /* Customer kiosk (/kiosk/*): always the light palette, whatever the device's
@@ -137,20 +136,20 @@
   --card-foreground: #111827;
   --popover: #FFFFFF;
   --popover-foreground: #111827;
-  --primary: #9F1239;
+  --primary: #FF7A1A;
   --primary-foreground: #FFFFFF;
   --secondary: #F5F1F0;
   --secondary-foreground: #111827;
   --muted: #F5F1F0;
   --muted-foreground: #4B5563;
-  --accent: #FDF2F4;
-  --accent-foreground: #9F1239;
+  --accent: #FFF1E6;
+  --accent-foreground: #C2410C;
   --destructive: #B91C1C;
   --success: #15803D;
   --warning: #B45309;
   --border: #D9CFCC;
   --input: #C9BDBA;
-  --ring: #9F1239;
+  --ring: #FF7A1A;
   /* Explicit system fallbacks so the kiosk never renders in a serif face if the
      bundled web font is unavailable (offline start-up, blocked fonts CDN). */
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, "Segoe UI", Roboto,
@@ -236,14 +235,12 @@
    rules would silently beat every utility class.
    --------------------------------------------------------------------------- */
 :root {
-  --shadow-card: 0 1px 2px rgb(17 24 39 / 0.04), 0 8px 24px -12px rgb(76 14 34 / 0.10);
-  --shadow-card-hover: 0 2px 4px rgb(17 24 39 / 0.05), 0 16px 32px -14px rgb(76 14 34 / 0.18);
-  --gradient-primary: linear-gradient(135deg, #B3163F 0%, #9F1239 45%, #7A0E2C 100%);
+  --shadow-card: 0 1px 2px rgb(17 24 39 / 0.04), 0 8px 24px -12px rgb(124 45 18 / 0.10);
+  --shadow-card-hover: 0 2px 4px rgb(17 24 39 / 0.05), 0 16px 32px -14px rgb(124 45 18 / 0.18);
 }
 .dark {
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 28px -14px rgb(0 0 0 / 0.6);
-  --shadow-card-hover: 0 2px 4px rgb(0 0 0 / 0.45), 0 18px 36px -14px rgb(251 113 133 / 0.18);
-  --gradient-primary: linear-gradient(135deg, #FB7185 0%, #F43F5E 55%, #E11D48 100%);
+  --shadow-card-hover: 0 2px 4px rgb(0 0 0 / 0.45), 0 18px 36px -14px rgb(255 122 26 / 0.18);
 }
 
 @layer base {
@@ -252,17 +249,12 @@
     text-rendering: optimizeLegibility;
     font-feature-settings: "cv11", "ss01";
   }
-  body {
-    background-image:
-      radial-gradient(60rem 28rem at 100% -10%, rgb(159 18 57 / 0.045), transparent 60%),
-      radial-gradient(48rem 24rem at -10% 110%, rgb(245 158 11 / 0.035), transparent 60%);
-    background-attachment: fixed;
-  }
   h1, h2, h3 {
     letter-spacing: -0.015em;
   }
   ::selection {
-    background: rgb(159 18 57 / 0.18);
+    background: var(--primary);
+    color: var(--primary-foreground);
   }
   :focus-visible {
     outline: 2px solid var(--ring);
@@ -309,8 +301,7 @@
   }
   [data-slot="button"][data-variant="default"],
   button[data-slot="button"].bg-primary {
-    background-image: var(--gradient-primary);
-    box-shadow: 0 1px 0 rgb(255 255 255 / 0.18) inset, 0 6px 14px -6px rgb(159 18 57 / 0.55);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.18) inset, 0 6px 14px -6px rgb(255 122 26 / 0.45);
     transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease;
   }
   [data-slot="button"][data-variant="default"]:hover:not(:disabled) {
