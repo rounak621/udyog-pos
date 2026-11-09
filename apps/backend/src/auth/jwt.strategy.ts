@@ -4,6 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import type { SessionUser } from '@nodedr-restaurant/types';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import type { AllowWhenExpiredRequest } from '../common/guards/jwt-auth.guard';
 import {
   RESTAURANT_ACCESS_SELECT,
   assertRestaurantAllowed,
@@ -29,10 +30,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
       ignoreExpiration: false,
       secretOrKey: config.getOrThrow<string>('JWT_SECRET'),
+      // validate() needs the request for the  flag.
+      passReqToCallback: true,
     });
   }
 
-  async validate(payload: JwtPayload): Promise<SessionUser> {
+  async validate(
+    req: AllowWhenExpiredRequest,
+    payload: JwtPayload,
+  ): Promise<SessionUser> {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       include: {
@@ -45,9 +51,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Session no longer valid');
     }
     // Hosted mode: a suspended or expired restaurant is locked on every
-    // request (403 + code). Platform admins always get through.
+    // request (403 + code). Platform admins always get through; billing
+    // routes () stay open for an expired trial/subscription.
     assertRestaurantAllowed(user.restaurant, {
       isPlatformAdmin: user.isPlatformAdmin,
+      allowExpired: req?.allowWhenExpired === true,
     });
 
     return {

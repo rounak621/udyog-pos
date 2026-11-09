@@ -4,10 +4,12 @@ import { Logo } from "@/components/layout/logo";
 import { SUPPORT_EMAIL } from "@/lib/support";
 
 // Shown (outside the dashboard shell, no sidebar) when the API answers 403
-// with RESTAURANT_SUSPENDED or TRIAL_EXPIRED. Data is kept; only access stops.
+// with RESTAURANT_SUSPENDED, TRIAL_EXPIRED or SUBSCRIPTION_EXPIRED. Data is
+// kept; only access stops.
 const MESSAGES: Record<AccessBlockCode, string> = {
   RESTAURANT_SUSPENDED: "This account is suspended. Please contact support.",
   TRIAL_EXPIRED: "Your free trial has ended. Please contact support to continue.",
+  SUBSCRIPTION_EXPIRED: "Your subscription has ended. Please choose a plan or contact support.",
 };
 
 export default async function AccountBlockedPage({

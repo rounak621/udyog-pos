@@ -38,6 +38,8 @@ export const PERMISSIONS = [
   { key: "marketing.manage", label: "Manage Coupons, Promotions & Campaigns", category: "Marketing" },
   { key: "operations.manage", label: "Manage Equipment & Documents", category: "Operations" },
   { key: "system.update", label: "Manage App Updates", category: "Admin" },
+  // UDYOG subscription for this restaurant (plans, payments, invoices).
+  { key: "billing.manage", label: "Manage Subscription & Billing", category: "Admin" },
 ] as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[number]["key"];

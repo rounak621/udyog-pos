@@ -2,11 +2,18 @@
 // by the platform admin. This is the ONE place that decides whether a
 // restaurant may use the app right now; backend and web both call it.
 
-export const RESTAURANT_STATUSES = ["TRIAL", "ACTIVE", "SUSPENDED"] as const;
+// EXPIRED: a paid subscription lapsed (or was cancelled and its period ended).
+export const RESTAURANT_STATUSES = ["TRIAL", "ACTIVE", "SUSPENDED", "EXPIRED"] as const;
 export type RestaurantStatus = (typeof RESTAURANT_STATUSES)[number];
 
-export type AccessBlockCode = "RESTAURANT_SUSPENDED" | "TRIAL_EXPIRED";
-export const ACCESS_BLOCK_CODES: readonly AccessBlockCode[] = ["RESTAURANT_SUSPENDED", "TRIAL_EXPIRED"];
+export type AccessBlockCode = "RESTAURANT_SUSPENDED" | "TRIAL_EXPIRED" | "SUBSCRIPTION_EXPIRED";
+export const ACCESS_BLOCK_CODES: readonly AccessBlockCode[] = [
+  "RESTAURANT_SUSPENDED",
+  "TRIAL_EXPIRED",
+  "SUBSCRIPTION_EXPIRED",
+];
+/** Locked only until someone pays: these may still reach the billing routes. */
+export const BILLING_REACHABLE_CODES: readonly AccessBlockCode[] = ["TRIAL_EXPIRED", "SUBSCRIPTION_EXPIRED"];
 
 export interface AccessState {
   allowed: boolean;
@@ -23,6 +30,9 @@ export function getAccessState(
 ): AccessState {
   if (restaurant.status === "SUSPENDED") {
     return { allowed: false, code: "RESTAURANT_SUSPENDED", daysLeft: null };
+  }
+  if (restaurant.status === "EXPIRED") {
+    return { allowed: false, code: "SUBSCRIPTION_EXPIRED", daysLeft: null };
   }
   if (restaurant.status === "TRIAL") {
     if (!restaurant.trialEndsAt) return { allowed: true, code: null, daysLeft: null };

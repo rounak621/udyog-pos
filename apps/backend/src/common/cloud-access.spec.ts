@@ -75,10 +75,10 @@ describe('JwtStrategy lock', () => {
 
   it('rejects suspended and expired restaurants with the code', async () => {
     await expect(
-      strategyFor('SUSPENDED', null, false).validate({ sub: 'u1' }),
+      strategyFor('SUSPENDED', null, false).validate({}, { sub: 'u1' }),
     ).rejects.toMatchObject({ response: { code: 'RESTAURANT_SUSPENDED' } });
     const err = await strategyFor('TRIAL', new Date(Date.now() - DAY), false)
-      .validate({ sub: 'u1' })
+      .validate({}, { sub: 'u1' })
       .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ForbiddenException);
     expect((err as ForbiddenException).getResponse()).toMatchObject({
@@ -88,7 +88,7 @@ describe('JwtStrategy lock', () => {
 
   it('lets a platform admin through even when suspended', async () => {
     await expect(
-      strategyFor('SUSPENDED', null, true).validate({ sub: 'u1' }),
+      strategyFor('SUSPENDED', null, true).validate({}, { sub: 'u1' }),
     ).resolves.toMatchObject({ id: 'u1', isPlatformAdmin: true });
   });
 });

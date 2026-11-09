@@ -86,9 +86,13 @@ export class AuthService {
     }
 
     // Checked only after the password (and 2FA) is right, so a locked
-    // restaurant is never revealed to someone guessing passwords.
+    // restaurant is never revealed to someone guessing passwords. An expired
+    // trial/subscription still gets a session: every route except billing
+    // (@AllowWhenExpired) answers 403 with the code, so the owner can pay.
+    // SUSPENDED is refused here.
     assertRestaurantAllowed(user.restaurant, {
       isPlatformAdmin: user.isPlatformAdmin,
+      allowExpired: true,
     });
     return this.issueSession(user);
   }

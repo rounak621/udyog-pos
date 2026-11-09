@@ -21,6 +21,7 @@ const STATUS_STYLE: Record<RestaurantStatus, string> = {
   TRIAL: "border-warning bg-warning-soft",
   ACTIVE: "border-success bg-success-soft",
   SUSPENDED: "border-destructive bg-destructive-soft",
+  EXPIRED: "border-destructive bg-muted",
 };
 
 const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString() : "—");

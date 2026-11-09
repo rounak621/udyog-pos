@@ -1,6 +1,7 @@
 import { ForbiddenException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import {
+  BILLING_REACHABLE_CODES,
   getAccessState,
   type AccessBlockCode,
   type RestaurantStatus,
@@ -26,6 +27,8 @@ export const ACCESS_BLOCK_MESSAGES: Record<AccessBlockCode, string> = {
   RESTAURANT_SUSPENDED: 'This account is suspended. Please contact support.',
   TRIAL_EXPIRED:
     'Your free trial has ended. Please contact support to continue.',
+  SUBSCRIPTION_EXPIRED:
+    'Your subscription has ended. Please choose a plan or contact support.',
 };
 
 export function isRestaurantAllowed(
@@ -36,16 +39,20 @@ export function isRestaurantAllowed(
 }
 
 /**
- * 403 { code: RESTAURANT_SUSPENDED | TRIAL_EXPIRED, message } when the
- * restaurant may not use the app. Platform admins are always let through.
+ * 403 { code: RESTAURANT_SUSPENDED | TRIAL_EXPIRED | SUBSCRIPTION_EXPIRED,
+ * message } when the restaurant may not use the app. Platform admins are
+ * always let through. allowExpired (billing routes, see )
+ * lets an expired trial/subscription through so the owner can pay; a
+ * SUSPENDED restaurant is never let through.
  */
 export function assertRestaurantAllowed(
   restaurant: RestaurantAccessFields,
-  opts: { isPlatformAdmin?: boolean } = {},
+  opts: { isPlatformAdmin?: boolean; allowExpired?: boolean } = {},
 ): void {
   if (opts.isPlatformAdmin) return;
   const state = getAccessState(restaurant);
   if (state.allowed || !state.code) return;
+  if (opts.allowExpired && BILLING_REACHABLE_CODES.includes(state.code)) return;
   throw new ForbiddenException({
     statusCode: 403,
     code: state.code,

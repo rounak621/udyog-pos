@@ -45,6 +45,7 @@ enum RestaurantStatus {
   TRIAL
   ACTIVE
   SUSPENDED
+  EXPIRED // paid subscription lapsed (or cancelled and its period ended)
 }
 
 model Restaurant {
@@ -87,6 +88,9 @@ model Restaurant {
   users              User[]
   integrationApiKeys IntegrationApiKey[]
   webhookEndpoints   WebhookEndpoint[]
+  subscriptions        Subscription[]
+  subscriptionPayments SubscriptionPayment[]
+  subscriptionInvoices SubscriptionInvoice[]
 
   @@map("restaurants")
 }
@@ -2333,4 +2337,127 @@ model SyncChange {
 
   @@index([tbl, pkKey], map: "sync_changes_row_idx")
   @@map("sync_changes")
+}
+
+// ---------------------------------------------------------------------------
+// Billing: UDYOG's own subscriptions (Razorpay Subscriptions), not a
+// restaurant's sales. Prices are in paise EXCLUDING GST; nothing is seeded.
+// A restaurant that is ACTIVE with no Subscription row is free/complimentary.
+// ---------------------------------------------------------------------------
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  CREATED
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum SubscriptionPaymentStatus {
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+model Plan {
+  id                    String   @id @default(cuid())
+  code                  String   @unique
+  name                  String
+  priceMonthlyPaise     Int? // excl. GST; null = not offered/not set
+  priceYearlyPaise      Int?
+  maxBranches           Int? // null = unlimited
+  maxUsers              Int?
+  isActive              Boolean  @default(true)
+  sortOrder             Int      @default(0)
+  // Razorpay plans are immutable: a price change creates a new one; existing
+  // subscribers stay on the plan they subscribed with.
+  razorpayPlanIdMonthly String?
+  razorpayPlanIdYearly  String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  restaurantId           String
+  restaurant             Restaurant         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  planId                 String
+  plan                   Plan               @relation(fields: [planId], references: [id])
+  billingCycle           BillingCycle
+  status                 SubscriptionStatus @default(CREATED)
+  razorpaySubscriptionId String             @unique
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean            @default(false)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  payments SubscriptionPayment[]
+
+  @@index([restaurantId, status])
+  @@map("subscriptions")
+}
+
+model SubscriptionPayment {
+  id                String                    @id @default(cuid())
+  restaurantId      String
+  restaurant        Restaurant                @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  subscriptionId    String
+  subscription      Subscription              @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  razorpayPaymentId String                    @unique
+  amountPaise       Int // total charged (incl. GST)
+  taxableValuePaise Int
+  taxPaise          Int
+  status            SubscriptionPaymentStatus
+  paidAt            DateTime
+  invoiceId         String? // null = no invoice (company GST details not configured)
+
+  invoice SubscriptionInvoice?
+
+  @@index([restaurantId, paidAt])
+  @@map("subscription_payments")
+}
+
+model SubscriptionInvoice {
+  id            String              @id @default(cuid())
+  restaurantId  String
+  restaurant    Restaurant          @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  paymentId     String              @unique
+  payment       SubscriptionPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoiceNumber String              @unique
+  financialYear String // e.g. "2026-27" (April-March, Asia/Kolkata)
+  issuedAt      DateTime            @default(now())
+  // Seller, buyer, lines, SAC and tax split as issued; later edits to the
+  // company, restaurant or plan never change an issued invoice.
+  snapshot      Json
+
+  @@index([restaurantId, issuedAt])
+  @@map("subscription_invoices")
+}
+
+model InvoiceCounter {
+  financialYear String @id
+  lastNumber    Int    @default(0)
+
+  @@map("invoice_counters")
+}
+
+// Razorpay webhook idempotency: one row per delivered event id.
+model BillingEvent {
+  id              String    @id @default(cuid())
+  razorpayEventId String    @unique
+  type            String
+  receivedAt      DateTime  @default(now())
+  processedAt     DateTime?
+
+  @@map("billing_events")
 }
