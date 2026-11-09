@@ -9,6 +9,7 @@ import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { AuditService } from '../../audit/audit.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { assertWithinPlanLimit } from '../../common/plan-limits';
 
 const SELECT = {
   id: true,
@@ -49,6 +50,7 @@ export class UsersService {
     await this.assertBranchesInRestaurant(restaurantId, dto.branchIds);
 
     if (dto.email) await this.assertEmailFree(dto.email);
+    await assertWithinPlanLimit(this.prisma, restaurantId, 'users');
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const user = await this.prisma.user.create({
@@ -118,6 +120,10 @@ export class UsersService {
     }
     if (dto.email && dto.email !== existing.email) {
       await this.assertEmailFree(dto.email, id);
+    }
+    // Re-activating a disabled account counts against the plan's user limit.
+    if (dto.isActive === true && !existing.isActive) {
+      await assertWithinPlanLimit(this.prisma, restaurantId, 'users');
     }
 
     const passwordHash = dto.password

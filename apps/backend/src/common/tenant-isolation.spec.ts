@@ -66,6 +66,7 @@ describe('isPlatformAdmin cannot be mass-assigned', () => {
     const prisma = {
       role: { findFirst: jest.fn().mockResolvedValue({ id: 'role1' }) },
       branch: { count: jest.fn().mockResolvedValue(1) },
+      subscription: { findFirst: jest.fn().mockResolvedValue(null) },
       user: { findFirst: jest.fn().mockResolvedValue(null), create },
     };
     await new UsersService(prisma as never, audit).create('r1', 'u1', {
@@ -138,6 +139,7 @@ describe('staff email', () => {
     const prisma = {
       role: { findFirst: jest.fn().mockResolvedValue({ id: 'role1' }) },
       branch: { count: jest.fn().mockResolvedValue(1) },
+      subscription: { findFirst: jest.fn().mockResolvedValue(null) },
       user: { findFirst, create: jest.fn() },
     };
     await expect(
