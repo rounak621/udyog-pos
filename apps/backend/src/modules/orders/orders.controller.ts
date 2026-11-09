@@ -139,6 +139,7 @@ function toEscposOrder(
       unitPriceSnapshot: Number(item.unitPriceSnapshot),
       lineTotal: Number(item.lineTotal),
       taxRateSnapshot: Number(item.taxRateSnapshot),
+      hsnSac: item.hsnSacSnapshot,
       modifiers: item.modifiers.map((m) => ({
         nameSnapshot: m.nameSnapshot,
         priceAdjSnapshot: Number(m.priceAdjSnapshot),

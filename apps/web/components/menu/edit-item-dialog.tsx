@@ -51,6 +51,7 @@ export function EditItemDialog({
   const [stationId, setStationId] = useState(item.stationId ?? "");
   const [price, setPrice] = useState(item.price);
   const [halfPrice, setHalfPrice] = useState(item.halfPrice ?? "");
+  const [hsnSac, setHsnSac] = useState(item.hsnSac ?? "");
   const [taxRatePercent, setTaxRatePercent] = useState(item.taxRatePercent);
   const [isVeg, setIsVeg] = useState(item.isVeg);
   const [imageUrl, setImageUrl] = useState<string | undefined>(item.imageUrl ?? undefined);
@@ -62,6 +63,7 @@ export function EditItemDialog({
   const { data: me } = useCurrentUser();
   const updateItem = useUpdateMenuItem(branchId);
   const uploadImage = useUploadItemImage();
+  const isIndia = settings?.branch.taxRegime === "INDIA_GST";
   const priceLabel =
     settings?.branch.taxMode === "EXCLUSIVE" ? "Price (excl. tax)" : "Price (incl. tax)";
 
@@ -93,6 +95,7 @@ export function EditItemDialog({
           stationId: stationId || undefined,
           price: Number(price),
           halfPrice: halfPrice.trim() === "" ? null : Number(halfPrice),
+          ...(isIndia ? { hsnSac: hsnSac || null } : {}),
           taxRatePercent: Number(taxRatePercent),
           isVeg,
           imageUrl,
@@ -230,6 +233,24 @@ export function EditItemDialog({
               When set, the POS asks Half / Full / Custom. The price above is the Full portion.
             </p>
           </div>
+
+          {isIndia && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="edit-hsn">HSN/SAC (optional)</Label>
+              <Input
+                id="edit-hsn"
+                inputMode="numeric"
+                pattern="\d{4,8}"
+                maxLength={8}
+                value={hsnSac}
+                onChange={(e) => setHsnSac(e.target.value.replace(/\D/g, ""))}
+                placeholder={settings?.branch.defaultHsnSac || "4 to 8 digits"}
+              />
+              <p className="text-xs text-muted-foreground">
+                Printed on the bill. Leave empty to use the branch default.
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             <Label>Kitchen station</Label>

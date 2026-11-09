@@ -28,7 +28,7 @@ export const restaurantSettingsSchema = z.object({
 });
 export type RestaurantSettingsDto = z.infer<typeof restaurantSettingsSchema>;
 
-import { TAX_MODES, TAX_REGIMES } from "./tax";
+import { hsnSacSchema, TAX_MODES, TAX_REGIMES } from "./tax";
 
 export const branchSettingsSchema = z.object({
   name: z.string().min(1).optional(),
@@ -42,6 +42,8 @@ export const branchSettingsSchema = z.object({
   taxMode: z.enum(TAX_MODES).optional(),
   taxLabel: z.string().max(30).optional().nullable(),
   taxId: z.string().max(50).optional().nullable(),
+  // India GST: fallback HSN/SAC for items without their own code.
+  defaultHsnSac: hsnSacSchema,
   // Online order / table-booking handling (false = staff accept manually).
   autoConfirmOrders: z.boolean().optional(),
   autoConfirmReservations: z.boolean().optional(),

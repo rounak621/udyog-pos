@@ -44,6 +44,7 @@ export function AddItemDialog({
   const [stationId, setStationId] = useState<string>("");
   const [price, setPrice] = useState("");
   const [halfPrice, setHalfPrice] = useState("");
+  const [hsnSac, setHsnSac] = useState("");
   const [taxRatePercent, setTaxRatePercent] = useState("5");
   const [isVeg, setIsVeg] = useState(true);
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
@@ -54,6 +55,7 @@ export function AddItemDialog({
   const { data: settings } = useSettings(branchId);
   const createItem = useCreateMenuItem(branchId);
   const uploadImage = useUploadItemImage();
+  const isIndia = settings?.branch.taxRegime === "INDIA_GST";
   const priceLabel =
     settings?.branch.taxMode === "EXCLUSIVE" ? "Price (excl. tax)" : "Price (incl. tax)";
 
@@ -62,6 +64,7 @@ export function AddItemDialog({
     setCategoryId("");
     setStationId("");
     setPrice("");
+    setHsnSac("");
     setTaxRatePercent("5");
     setIsVeg(true);
     setImageUrl(undefined);
@@ -95,6 +98,7 @@ export function AddItemDialog({
         stationId: stationId || undefined,
         price: Number(price),
         halfPrice: halfPrice.trim() === "" ? undefined : Number(halfPrice),
+        hsnSac: isIndia && hsnSac ? hsnSac : undefined,
         taxRatePercent: Number(taxRatePercent),
         isVeg,
         isVegan: false,
@@ -253,6 +257,24 @@ export function AddItemDialog({
               When set, the POS asks Half / Full / Custom. The price above is the Full portion.
             </p>
           </div>
+
+          {isIndia && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="add-hsn">HSN/SAC (optional)</Label>
+              <Input
+                id="add-hsn"
+                inputMode="numeric"
+                pattern="\d{4,8}"
+                maxLength={8}
+                value={hsnSac}
+                onChange={(e) => setHsnSac(e.target.value.replace(/\D/g, ""))}
+                placeholder={settings?.branch.defaultHsnSac || "4 to 8 digits"}
+              />
+              <p className="text-xs text-muted-foreground">
+                Printed on the bill. Leave empty to use the branch default.
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             <Label>Kitchen station</Label>

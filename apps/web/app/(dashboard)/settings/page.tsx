@@ -194,6 +194,7 @@ function GeneralSettingsForm({
   const [taxMode, setTaxMode] = useState<TaxMode>(branch.taxMode);
   const [taxLabel, setTaxLabel] = useState(branch.taxLabel ?? "");
   const [taxId, setTaxId] = useState(branch.taxId ?? "");
+  const [defaultHsnSac, setDefaultHsnSac] = useState(branch.defaultHsnSac ?? "");
 
   const preset = TAX_REGIME_PRESETS[taxRegime];
 
@@ -234,6 +235,7 @@ function GeneralSettingsForm({
         taxMode,
         taxLabel: taxLabel || null,
         taxId: taxId || null,
+        ...(taxRegime === "INDIA_GST" ? { defaultHsnSac: defaultHsnSac || null } : {}),
       },
       {
         onSuccess: () => toast.success("Branch details saved"),
@@ -490,6 +492,23 @@ function GeneralSettingsForm({
               <Input id="b-tax-id" value={taxId} onChange={(e) => setTaxId(e.target.value)} />
             </div>
           </div>
+          {taxRegime === "INDIA_GST" && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="b-hsn">Default HSN/SAC</Label>
+              <Input
+                id="b-hsn"
+                inputMode="numeric"
+                pattern="\d{4,8}"
+                maxLength={8}
+                value={defaultHsnSac}
+                onChange={(e) => setDefaultHsnSac(e.target.value.replace(/\D/g, ""))}
+                placeholder="996331"
+              />
+              <p className="text-xs text-muted-foreground">
+                Printed on bill lines for items without their own HSN/SAC. 996331 is the SAC for restaurant services.
+              </p>
+            </div>
+          )}
           <div className="flex flex-col gap-2">
             <Label htmlFor="b-tax-label">Receipt label override (optional)</Label>
             <Input

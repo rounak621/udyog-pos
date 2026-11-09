@@ -84,6 +84,8 @@ export interface EscposReceiptOrder {
     unitPriceSnapshot: number;
     lineTotal: number;
     taxRateSnapshot: number;
+    /** India GST: HSN/SAC snapshotted on the order line. */
+    hsnSac?: string | null;
     modifiers: { nameSnapshot: string; priceAdjSnapshot: number }[];
   }[];
   payments: {

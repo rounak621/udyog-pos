@@ -68,6 +68,8 @@ interface ReceiptOrder {
     unitPriceSnapshot: number;
     lineTotal: number;
     taxRateSnapshot: number;
+    /** India GST: HSN/SAC snapshotted on the order line. */
+    hsnSac?: string | null;
     modifiers: { nameSnapshot: string; priceAdjSnapshot: number }[];
   }[];
   payments: {
@@ -109,15 +111,20 @@ export function buildReceiptHtml({
     branch.taxId ||
     (branch.taxRegime === 'INDIA_GST' ? branch.gstNumber : null);
   const taxIdLabel = resolveTaxIdLabel(branch.taxRegime);
+  const isIndia = branch.taxRegime === 'INDIA_GST';
 
   const itemRows = order.items
     .map((item) => {
       const modifierLines = item.modifiers
         .map((m) => `<div class="sub">+ ${esc(m.nameSnapshot)}</div>`)
         .join('');
+      const hsnLine =
+        isIndia && item.hsnSac
+          ? `<div class="sub">HSN/SAC: ${esc(item.hsnSac)}</div>`
+          : '';
       return `
         <tr>
-          <td>${esc(item.nameSnapshot)}${modifierLines}${
+          <td>${esc(item.nameSnapshot)}${modifierLines}${hsnLine}${
             Number(item.taxRateSnapshot) > 0
               ? `<div class="sub">${esc(taxLabel)} @ ${item.taxRateSnapshot}%</div>`
               : ''

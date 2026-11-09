@@ -108,3 +108,22 @@ export const branchTaxSettingsSchema = z.object({
   taxId: z.string().max(50).optional().nullable(),
 });
 export type BranchTaxSettingsDto = z.infer<typeof branchTaxSettingsSchema>;
+
+// ---------------------------------------------------------------------------
+// India GST fields (2026-11-09). Shown and printed only when the branch
+// regime is INDIA_GST. An empty string means "not set" (forms send "" or
+// null to clear a value).
+// ---------------------------------------------------------------------------
+
+/** HSN/SAC code: digits only, 4 to 8 characters. */
+export const HSN_SAC_PATTERN = /^\d{4,8}$/;
+export function isValidHsnSac(value: string): boolean {
+  return HSN_SAC_PATTERN.test(value);
+}
+/** Optional HSN/SAC: empty clears it, otherwise 4-8 digits. */
+export const hsnSacSchema = z
+  .string()
+  .trim()
+  .refine((v) => v === "" || isValidHsnSac(v), "HSN/SAC must be 4 to 8 digits")
+  .nullable()
+  .optional();

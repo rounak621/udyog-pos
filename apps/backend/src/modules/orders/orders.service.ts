@@ -157,6 +157,15 @@ export class OrdersService {
     return branch?.taxMode ?? 'INCLUSIVE';
   }
 
+  // India GST: the code printed for an item without its own HSN/SAC.
+  private async getBranchDefaultHsnSac(branchId: string): Promise<string | null> {
+    const branch = await this.prisma.branch.findUnique({
+      where: { id: branchId },
+      select: { defaultHsnSac: true },
+    });
+    return branch?.defaultHsnSac || null;
+  }
+
   async createOrder(
     branchId: string,
     userId: string,
@@ -191,6 +200,7 @@ export class OrdersService {
     }
     const menuItemById = new Map(menuItems.map((m) => [m.id, m]));
     const taxMode = await this.getBranchTaxMode(branchId);
+    const defaultHsnSac = await this.getBranchDefaultHsnSac(branchId);
 
     const modifierIds = [...new Set(dto.items.flatMap((i) => i.modifierIds))];
     const modifiers = await this.prisma.modifier.findMany({
@@ -348,6 +358,7 @@ export class OrdersService {
               nameSnapshot: line.menuItem.name,
               unitPriceSnapshot: line.menuItem.price,
               taxRateSnapshot: line.menuItem.taxRatePercent,
+              hsnSacSnapshot: line.menuItem.hsnSac || defaultHsnSac,
               quantity: line.cartItem.quantity,
               lineTotal: line.priced.lineTotal,
               kitchenNote: line.cartItem.kitchenNote,
@@ -473,6 +484,7 @@ export class OrdersService {
     }
     const menuItemById = new Map(menuItems.map((m) => [m.id, m]));
     const taxMode = await this.getBranchTaxMode(branchId);
+    const defaultHsnSac = await this.getBranchDefaultHsnSac(branchId);
 
     const modifierIds = [...new Set(items.flatMap((i) => i.modifierIds))];
     const modifiers = await this.prisma.modifier.findMany({
@@ -503,6 +515,7 @@ export class OrdersService {
               nameSnapshot: line.menuItem.name,
               unitPriceSnapshot: line.menuItem.price,
               taxRateSnapshot: line.menuItem.taxRatePercent,
+              hsnSacSnapshot: line.menuItem.hsnSac || defaultHsnSac,
               quantity: line.cartItem.quantity,
               lineTotal: line.priced.lineTotal,
               kitchenNote: line.cartItem.kitchenNote,
@@ -2074,6 +2087,7 @@ export class OrdersService {
         name: menuItem.name + portionSuffix,
         price: unitPriceInclusive - round2(modifierTotal),
         taxRatePercent,
+        hsnSac: menuItem.hsnSac,
       },
       selectedModifiers,
       priced,
