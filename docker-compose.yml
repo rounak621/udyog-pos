@@ -50,6 +50,16 @@ services:
       ALLOW_SIGNUP: "${ALLOW_SIGNUP:-}"
       TRIAL_DAYS: "${TRIAL_DAYS:-14}"
       TRUST_PROXY: "${TRUST_PROXY:-}"
+      # Billing (see .env.example): Razorpay, grace days, seller details for invoices.
+      RAZORPAY_KEY_ID: "${RAZORPAY_KEY_ID:-}"
+      RAZORPAY_KEY_SECRET: "${RAZORPAY_KEY_SECRET:-}"
+      RAZORPAY_WEBHOOK_SECRET: "${RAZORPAY_WEBHOOK_SECRET:-}"
+      GRACE_DAYS: "${GRACE_DAYS:-3}"
+      COMPANY_NAME: "${COMPANY_NAME:-}"
+      COMPANY_GSTIN: "${COMPANY_GSTIN:-}"
+      COMPANY_ADDRESS: "${COMPANY_ADDRESS:-}"
+      SUBSCRIPTION_SAC: "${SUBSCRIPTION_SAC:-}"
+      GST_RATE_PERCENT: "${GST_RATE_PERCENT:-}"
       # In-app updates (Settings > Updates): the backend asks the `updater`
       # container below to pull the latest published images. Unset these two
       # and the Update button simply says this install can't update itself.

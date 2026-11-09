@@ -68,3 +68,12 @@ UDYOG POS = restaurant POS, white-labelled from an AGPL-3.0 open-source repo, ow
 - Platform screen (/platform, platform admins only): restaurant name, owner email, counts and status only; never orders, customers, menu or money. Actions: suspend, unsuspend, extend trial (1-90 days), mark active; each is audit-logged. An admin cannot suspend their own restaurant.
 - Sync never copies User.isPlatformAdmin from another install (LOCAL_ONLY_COLUMNS in sync.service.ts).
 - Known gaps: no email verification at sign-up, no payments yet; ALLOW_SIGNUP and TRIAL_DAYS are not passed to the backend container by docker-compose.yml yet.
+
+## Billing decisions
+- UDYOG's own subscriptions via Razorpay Subscriptions (apps/backend/src/modules/billing). Plans live in the DB (platform admin: /platform/plans); NO seed plans, no prices in code. Prices are paise EXCLUDING GST; Razorpay plan = price + GST (GST_RATE_PERCENT). A price change creates a new Razorpay plan; existing subscribers keep theirs.
+- Restaurant ACTIVE with no Subscription row = free/complimentary (no limits). EXPIRED = paid subscription lapsed or cancelled and its period ended (code SUBSCRIPTION_EXPIRED). Expired trial/subscription can still log in and reach only the billing routes (@AllowWhenExpired); SUSPENDED cannot.
+- The Razorpay webhook (POST /api/v1/billing/webhook, signature + event-id idempotency) is the source of truth; /billing/verify only checks the checkout signature. A daily reconcile job fixes missed webhooks (skipped without keys).
+- Plan limits (maxBranches/maxUsers) apply only with a live subscription; staff create and re-activation are checked. Branches have no create API yet.
+- GST invoices: UDYOG/<FY>/<6 digits>, per Indian FY (Asia/Kolkata), issued in the webhook transaction from the charged amount; snapshot JSON. Missing COMPANY_* / SUBSCRIPTION_SAC / GST_RATE_PERCENT = no invoice ("Invoice pending").
+- Env: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET, GRACE_DAYS (3), COMPANY_NAME, COMPANY_GSTIN, COMPANY_ADDRESS, SUBSCRIPTION_SAC, GST_RATE_PERCENT.
+- Known gaps: no plan change/upgrade flow; trial has no limits; SAC and GST rate need a CA check before launch; refunds not handled; invoice is HTML only (print to PDF); no email verification at sign-up.
