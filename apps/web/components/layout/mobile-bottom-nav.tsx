@@ -60,7 +60,7 @@ export function MobileBottomNav({
             <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
             <span className="max-w-full truncate px-1">{t(item.labelKey)}</span>
             {badges.nav[item.href] && !isActive ? (
-              <span className="absolute top-2 left-1/2 ml-2 h-2.5 w-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_2px_rgba(245,158,11,0.7)]" />
+              <span className="absolute top-2 left-1/2 ml-2 h-2.5 w-2.5 rounded-full bg-warning shadow-[0_0_8px_2px_var(--warning)]" />
             ) : null}
           </Link>
         );

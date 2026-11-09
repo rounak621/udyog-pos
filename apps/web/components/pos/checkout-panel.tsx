@@ -623,17 +623,17 @@ export function CheckoutPanel({
           )}
 
           {method === "UPI" && remainingDue > 0 && (
-            <div className="flex flex-col items-center gap-2 rounded-xl border border-border bg-white p-4">
+            <div className="flex flex-col items-center gap-2 rounded-xl border border-border bg-qr-surface p-4">
               {upiUri ? (
                 <>
                   <QRCodeSVG value={upiUri} size={176} level="M" marginSize={1} />
-                  <p className="text-xs font-medium text-[#17251d]">
+                  <p className="text-xs font-medium text-qr-foreground">
                     Scan with any UPI app · {formatCurrency(upiAmount)} pre-filled
                   </p>
-                  <p className="text-[11px] text-neutral-500">Also shown on the customer display</p>
+                  <p className="text-[11px] text-qr-muted-foreground">Also shown on the customer display</p>
                 </>
               ) : (
-                <p className="text-center text-xs text-neutral-600">
+                <p className="text-center text-xs text-qr-muted-foreground">
                   No UPI id set yet. <Link href="/settings" className="font-medium underline">Add your UPI id in Settings → Restaurant</Link> to show a payment QR here.
                 </p>
               )}

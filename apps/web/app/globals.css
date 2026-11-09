@@ -29,6 +29,11 @@
   --color-destructive: var(--destructive);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-success-soft: var(--success-soft);
+  --color-warning-soft: var(--warning-soft);
+  --color-qr-surface: var(--qr-surface);
+  --color-qr-foreground: var(--qr-foreground);
+  --color-qr-muted-foreground: var(--qr-muted-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -69,6 +74,12 @@
   --destructive: #EF4444;
   --success: #22C55E;
   --warning: #F59E0B;
+  --success-soft: #DCFCE7;
+  --warning-soft: #FEF3C7;
+  /* QR codes need a white quiet zone in every theme to scan reliably. */
+  --qr-surface: #FFFFFF;
+  --qr-foreground: #111827;
+  --qr-muted-foreground: #4B5563;
   --border: #ECE6E4;
   --input: #E4DCDA;
   --ring: #FF7A1A;
@@ -106,6 +117,12 @@
   --destructive: #F87171;
   --success: #34D399;
   --warning: #FBBF24;
+  --success-soft: #0F2A1C;
+  --warning-soft: #2E2208;
+  /* QR codes need a white quiet zone in every theme to scan reliably. */
+  --qr-surface: #FFFFFF;
+  --qr-foreground: #111827;
+  --qr-muted-foreground: #4B5563;
   --border: #26262A;
   --input: #26262A;
   --ring: #FF7A1A;
@@ -147,6 +164,12 @@
   --destructive: #B91C1C;
   --success: #15803D;
   --warning: #B45309;
+  --success-soft: #DCFCE7;
+  --warning-soft: #FEF3C7;
+  /* QR codes need a white quiet zone in every theme to scan reliably. */
+  --qr-surface: #FFFFFF;
+  --qr-foreground: #111827;
+  --qr-muted-foreground: #4B5563;
   --border: #D9CFCC;
   --input: #C9BDBA;
   --ring: #FF7A1A;

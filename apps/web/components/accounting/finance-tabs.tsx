@@ -96,7 +96,7 @@ export function BudgetsTab({ branchId }: { branchId: string | null }) {
                     <td>
                       <div className="h-2 w-full overflow-hidden rounded-full bg-secondary" role="progressbar" aria-valuenow={r.percentUsed} aria-valuemin={0} aria-valuemax={100} aria-label={`${r.category} budget used`}>
                         <div
-                          className={cn("h-full rounded-full", r.percentUsed > 100 ? "bg-destructive" : r.percentUsed >= 80 ? "bg-amber-500" : "bg-emerald-500")}
+                          className={cn("h-full rounded-full", r.percentUsed > 100 ? "bg-destructive" : r.percentUsed >= 80 ? "bg-warning" : "bg-success")}
                           style={{ width: `${Math.min(100, r.percentUsed)}%` }}
                         />
                       </div>
@@ -254,9 +254,9 @@ export function BankTab({ branchId }: { branchId: string | null }) {
                     {t.description}
                     {t.expense && <span className="block text-xs text-muted-foreground">↳ {t.expense.category}{t.expense.note ? ` · ${t.expense.note}` : ""}</span>}
                   </td>
-                  <td className={cn("text-right tabular-nums", t.amount < 0 ? "text-foreground" : "text-emerald-600")}>{formatCurrency(t.amount)}</td>
+                  <td className={cn("text-right tabular-nums", t.amount < 0 ? "text-foreground" : "text-success")}>{formatCurrency(t.amount)}</td>
                   <td>
-                    <span className={cn("rounded-full px-2 py-0.5 text-[11px]", t.status === "MATCHED" ? "bg-emerald-500/15 text-emerald-600" : t.status === "IGNORED" ? "bg-secondary text-muted-foreground" : "bg-amber-500/15 text-amber-600")}>
+                    <span className={cn("rounded-full px-2 py-0.5 text-[11px]", t.status === "MATCHED" ? "bg-success-soft text-success" : t.status === "IGNORED" ? "bg-secondary text-muted-foreground" : "bg-warning-soft text-warning")}>
                       {t.status.toLowerCase()}
                     </span>
                   </td>
