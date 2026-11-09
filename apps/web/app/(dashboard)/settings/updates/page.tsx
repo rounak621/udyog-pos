@@ -1,5 +1,6 @@
 "use client";
 
+import { PlatformAdminOnly } from "@/components/settings/platform-admin-only";
 import { useState } from "react";
 import { toast } from "sonner";
 import { NavDot } from "@/components/layout/nav-dot";
@@ -74,7 +75,7 @@ function pollUntilBackUp(onFailed: () => void) {
   }, 3000);
 }
 
-export default function UpdatesPage() {
+function UpdatesPageContent() {
   const { data, isLoading, refetch, isFetching } = useUpdateCheck();
   const applyUpdate = useApplyUpdate();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -197,5 +198,13 @@ export default function UpdatesPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function UpdatesPage() {
+  return (
+    <PlatformAdminOnly>
+      <UpdatesPageContent />
+    </PlatformAdminOnly>
   );
 }

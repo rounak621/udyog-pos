@@ -14,11 +14,13 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { useLogin } from "@/hooks/use-auth";
+import { useSetupStatus } from "@/hooks/use-setup-status";
 import { ApiError } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
   const login = useLogin();
+  const { data: setupStatus } = useSetupStatus();
   // Set once the server says this account uses two-factor authentication.
   const [needsCode, setNeedsCode] = useState(false);
   // Shown inline under the form (a toast vanishes before it can be read).
@@ -141,12 +143,14 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-8 text-center text-xs text-muted-foreground">
-          New restaurant?{" "}
-          <Link href="/signup" className="font-medium text-foreground hover:underline">
-            Create an account
-          </Link>
-        </p>
+        {setupStatus?.signupOpen && (
+          <p className="mt-8 text-center text-xs text-muted-foreground">
+            New restaurant?{" "}
+            <Link href="/signup" className="font-medium text-foreground hover:underline">
+              Create an account
+            </Link>
+          </p>
+        )}
       </motion.div>
     </main>
   );

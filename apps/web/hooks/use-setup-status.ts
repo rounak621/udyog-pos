@@ -10,7 +10,8 @@ import { api } from "@/lib/api";
 export function useSetupStatus() {
   return useQuery({
     queryKey: ["auth", "setup-status"],
-    queryFn: () => api.get<{ isSetup: boolean }>("/auth/setup-status"),
+    // signupOpen: no restaurant yet, or hosted mode (ALLOW_SIGNUP=true).
+    queryFn: () => api.get<{ isSetup: boolean; signupOpen: boolean }>("/auth/setup-status"),
     staleTime: 60_000,
   });
 }

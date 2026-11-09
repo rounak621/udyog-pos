@@ -1,5 +1,6 @@
 "use client";
 
+import { PlatformAdminOnly } from "@/components/settings/platform-admin-only";
 import { useState } from "react";
 import { toast } from "sonner";
 import { SettingsTabs } from "@/components/settings/settings-tabs";
@@ -20,7 +21,7 @@ import { ApiError } from "@/lib/api";
 
 const errMsg = (e: unknown, fallback: string) => (e instanceof ApiError ? e.message : fallback);
 
-export default function SyncSettingsPage() {
+function SyncSettingsPageContent() {
   const { data, isLoading } = useSyncStatus();
   const test = useTestSync();
   const enable = useEnableSync();
@@ -188,5 +189,13 @@ export default function SyncSettingsPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+export default function SyncSettingsPage() {
+  return (
+    <PlatformAdminOnly>
+      <SyncSettingsPageContent />
+    </PlatformAdminOnly>
   );
 }

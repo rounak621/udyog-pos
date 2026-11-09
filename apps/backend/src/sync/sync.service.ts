@@ -17,6 +17,25 @@ export interface SyncChange {
   ts: string;
 }
 
+/**
+ * Columns that must never come from another install (pull, push, merge or
+ * adopt all go through applyOne): an existing row keeps its local value and a
+ * new row gets the value given here. User.isPlatformAdmin is granted only on
+ * this server with scripts/make-platform-admin.ts.
+ */
+export const LOCAL_ONLY_COLUMNS: Record<string, Record<string, unknown>> = {
+  users: { isPlatformAdmin: false },
+};
+
+/** The incoming row with local-only columns forced to their safe value. */
+export function withLocalOnlyColumns(
+  tbl: string,
+  row: Record<string, unknown> | null,
+): Record<string, unknown> | null {
+  const forced = LOCAL_ONLY_COLUMNS[tbl];
+  return forced && row ? { ...row, ...forced } : row;
+}
+
 export interface ApplyResult {
   applied: number;
   skipped: number;
@@ -252,15 +271,16 @@ export class SyncService implements OnModuleInit, OnModuleDestroy {
         JSON.stringify(c.pk),
       );
     } else {
+      const localOnly = Object.keys(LOCAL_ONLY_COLUMNS[c.tbl] ?? {});
       const sets = t.cols
-        .filter((x) => !t.pk.includes(x))
+        .filter((x) => !t.pk.includes(x) && !localOnly.includes(x))
         .map((x) => `${this.q(x)} = EXCLUDED.${this.q(x)}`);
       const onConflict = sets.length
         ? `ON CONFLICT (${pkCols}) DO UPDATE SET ${sets.join(', ')}`
         : `ON CONFLICT (${pkCols}) DO NOTHING`;
       await tx.$executeRawUnsafe(
         `INSERT INTO ${tbl} SELECT * FROM jsonb_populate_record(NULL::${tbl}, $1::jsonb) ${onConflict}`,
-        JSON.stringify(c.row),
+        JSON.stringify(withLocalOnlyColumns(c.tbl, c.row)),
       );
     }
     return true;

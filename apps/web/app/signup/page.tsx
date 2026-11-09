@@ -28,10 +28,12 @@ export default function SignupPage() {
   } = useForm<RegisterDto>({ resolver: zodResolver(registerSchema) });
   const { data: setupStatus } = useSetupStatus();
 
-  // Sign-up is first-time setup only; once a restaurant exists, go to login.
+  // Sign-up is open for first-time setup, or always in hosted mode
+  // (ALLOW_SIGNUP=true); otherwise go to login.
+  const signupClosed = setupStatus !== undefined && !setupStatus.signupOpen;
   useEffect(() => {
-    if (setupStatus?.isSetup) router.replace("/login");
-  }, [setupStatus?.isSetup, router]);
+    if (signupClosed) router.replace("/login");
+  }, [signupClosed, router]);
 
   const onSubmit = (dto: RegisterDto) => {
     register.mutate(dto, {
@@ -42,7 +44,7 @@ export default function SignupPage() {
     });
   };
 
-  if (setupStatus?.isSetup) return null;
+  if (signupClosed) return null;
 
   return (
     <main className="relative flex flex-1 items-center justify-center overflow-hidden bg-background px-4 py-10">

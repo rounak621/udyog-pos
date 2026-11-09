@@ -174,7 +174,10 @@ export class AuthController {
   @Get('setup-status')
   async setupStatus() {
     const isSetup = await this.authService.hasAnyRestaurant();
-    return { isSetup };
+    // Sign-up is open for first setup, or always in hosted mode
+    // (ALLOW_SIGNUP=true) - the same rule register() enforces.
+    const signupOpen = !isSetup || process.env.ALLOW_SIGNUP === 'true';
+    return { isSetup, signupOpen };
   }
 
   private setSessionCookie(res: Response, token: string) {
