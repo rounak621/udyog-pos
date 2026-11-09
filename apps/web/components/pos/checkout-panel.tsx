@@ -297,7 +297,7 @@ export function CheckoutPanel({
           {formatCurrency(completed.totalAmount)}
         </p>
         {settlement.changeDue > 0 && (
-          <p className="rounded-lg bg-success/10 px-4 py-2 text-lg font-semibold tabular-nums text-success">
+          <p className="rounded-lg bg-success-soft px-4 py-2 text-lg font-semibold tabular-nums text-success">
             Change due {formatCurrency(settlement.changeDue)}
           </p>
         )}
@@ -435,7 +435,7 @@ export function CheckoutPanel({
           </div>
         </div>
         {!locked && (
-          <p className="mt-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
+          <p className="mt-2 rounded-lg bg-secondary px-3 py-2 text-xs text-muted-foreground">
             No need to pay right now — tap <span className="font-medium text-foreground">Back</span> to
             help another table and come bill this one later from here or the Tables page.
           </p>
@@ -605,12 +605,12 @@ export function CheckoutPanel({
                 onChange={(e) => setAmountText(e.target.value)}
               />
               {plan.valid && plan.change > 0 && (
-                <p className="rounded-lg bg-success/10 px-3 py-2 text-base font-semibold tabular-nums text-success" role="status">
+                <p className="rounded-lg bg-success-soft px-3 py-2 text-base font-semibold tabular-nums text-success" role="status">
                   Change due {formatCurrency(plan.change)}
                 </p>
               )}
               {plan.valid && plan.partial && (
-                <p className="rounded-lg bg-warning/10 px-3 py-2 text-sm text-warning" role="status">
+                <p className="rounded-lg bg-warning-soft px-3 py-2 text-sm text-warning" role="status">
                   Part payment — {formatCurrency(plan.balanceAfter)} will stay due and the table stays open.
                 </p>
               )}

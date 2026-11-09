@@ -68,7 +68,7 @@ export default function WebhooksPage() {
         </div>
 
         {secret && (
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm">
+          <div className="rounded-xl border border-primary bg-primary-soft p-4 text-sm">
             <p className="font-medium text-foreground">Signing secret — copy it now, it won&rsquo;t be shown again</p>
             <p className="mt-1 select-all break-all font-mono text-xs">{secret}</p>
             <div className="mt-2 flex gap-2">

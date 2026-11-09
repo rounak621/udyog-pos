@@ -242,7 +242,7 @@ function AuditLogRow({ entry }: { entry: AuditLogEntry }) {
       </TableRow>
       {expanded && hasMetadata ? (
         <TableRow>
-          <TableCell colSpan={5} className="whitespace-normal bg-muted/30">
+          <TableCell colSpan={5} className="whitespace-normal bg-muted">
             <pre className="max-h-64 overflow-auto rounded-lg bg-background p-3 text-xs text-muted-foreground">
               {JSON.stringify(entry.metadata, null, 2)}
             </pre>

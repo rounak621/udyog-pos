@@ -13,10 +13,10 @@ export const TOUCH = "min-h-[max(48px,3rem)] min-w-[max(48px,3rem)]";
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const VARIANT: Record<Variant, string> = {
-  primary: "bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-primary/50",
+  primary: "bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50",
   secondary: "border-2 border-border bg-card text-foreground hover:bg-secondary",
   ghost: "text-foreground hover:bg-secondary",
-  danger: "bg-destructive text-white hover:bg-destructive/90",
+  danger: "bg-destructive text-white hover:bg-destructive-hover",
 };
 
 export function KButton({
@@ -39,7 +39,7 @@ export function KButton({
       aria-busy={loading || undefined}
       className={cn(
         "inline-flex touch-manipulation select-none items-center justify-center gap-2 rounded-2xl px-5 font-semibold transition-colors",
-        "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/40",
+        "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring",
         "disabled:pointer-events-none disabled:opacity-60 active:scale-[0.98] motion-reduce:transition-none",
         TOUCH,
         large ? "py-4 text-[1.35rem]" : "py-2 text-[1.1rem]",
@@ -66,7 +66,7 @@ export function IconButton({
       {...props}
       className={cn(
         "inline-flex touch-manipulation select-none items-center justify-center rounded-full border-2 border-border bg-card text-foreground",
-        "hover:bg-secondary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/40",
+        "hover:bg-secondary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring",
         "disabled:pointer-events-none disabled:opacity-40 active:scale-95 motion-reduce:transition-none",
         TOUCH,
         className,
@@ -90,9 +90,9 @@ export function Banner({
 }) {
   const toneClass =
     tone === "error"
-      ? "border-destructive/50 bg-destructive/10"
+      ? "border-destructive bg-destructive-soft"
       : tone === "warning"
-        ? "border-warning/60 bg-warning/10"
+        ? "border-warning bg-warning-soft"
         : "border-border bg-secondary";
   return (
     <div

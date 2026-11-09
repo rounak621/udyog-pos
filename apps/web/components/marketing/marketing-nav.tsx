@@ -17,7 +17,7 @@ export function MarketingNav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-border bg-background backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2.5">
           <Logo size={30} />
@@ -63,7 +63,7 @@ export function MarketingNav() {
       </div>
 
       {open && (
-        <div className="border-t border-border/60 px-4 pb-4 md:hidden">
+        <div className="border-t border-border px-4 pb-4 md:hidden">
           <nav className="flex flex-col gap-1 pt-2">
             {links.map((l) => (
               <a

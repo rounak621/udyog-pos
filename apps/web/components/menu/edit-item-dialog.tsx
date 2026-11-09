@@ -136,13 +136,13 @@ export function EditItemDialog({
                     setImagePreview(undefined);
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
-                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-background/80 text-foreground"
+                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-background text-foreground"
                   aria-label="Remove photo"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
                 {uploadImage.isPending && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/60 text-xs">
+                  <div className="absolute inset-0 flex items-center justify-center bg-background text-xs">
                     Uploading…
                   </div>
                 )}

@@ -77,7 +77,7 @@ export function ReservationManageDialog({
               </span>
               {r.table && <span>· Table {r.table.name ?? r.table.number}</span>}
             </div>
-            <div className="rounded-lg bg-secondary/40 px-3 py-2">
+            <div className="rounded-lg bg-secondary px-3 py-2">
               <div className="font-medium text-foreground">{when(r.reservedAt)}</div>
               {r.specialRequests && (
                 <p className="mt-1 text-xs text-muted-foreground">Request: {r.specialRequests}</p>

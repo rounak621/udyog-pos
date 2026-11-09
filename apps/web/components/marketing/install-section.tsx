@@ -47,7 +47,7 @@ function CopyCommand() {
         setCopied(true);
         setTimeout(() => setCopied(false), 1800);
       }}
-      className="group flex w-full max-w-xl items-center justify-between gap-3 rounded-xl border border-border/60 bg-background px-4 py-3 text-left font-mono text-[13px] text-foreground/90 transition-colors hover:border-primary/40"
+      className="group flex w-full max-w-xl items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-3 text-left font-mono text-[13px] text-foreground transition-colors hover:border-primary"
     >
       <span className="truncate">{INSTALL_COMMAND}</span>
       <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:text-foreground">
@@ -81,9 +81,9 @@ export function InstallSection() {
           <RevealItem key={c.channel}>
             <a
               href={downloadHref(c.channel)}
-              className="group flex h-full flex-col rounded-2xl border border-border/60 bg-card p-6 transition-colors hover:border-primary/40"
+              className="group flex h-full flex-col rounded-2xl border border-border bg-card p-6 transition-colors hover:border-primary"
             >
-              <div className="inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <div className="inline-flex size-10 items-center justify-center rounded-xl bg-primary-soft text-primary">
                 <c.icon className="size-5" />
               </div>
               <h3 className="mt-4 text-[15px] font-semibold text-foreground">{c.title}</h3>

@@ -110,7 +110,7 @@ function ServiceTile({ icon, label, onClick }: { icon: React.ReactNode; label: s
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[14rem] flex-1 touch-manipulation select-none flex-col items-center justify-center gap-4 rounded-3xl border-4 border-border bg-card text-[2rem] font-bold text-foreground transition-colors hover:border-primary hover:bg-accent focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/40 active:scale-[0.98] motion-reduce:transition-none"
+      className="flex min-h-[14rem] flex-1 touch-manipulation select-none flex-col items-center justify-center gap-4 rounded-3xl border-4 border-border bg-card text-[2rem] font-bold text-foreground transition-colors hover:border-primary hover:bg-accent focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring active:scale-[0.98] motion-reduce:transition-none"
     >
       <span className="text-primary">{icon}</span>
       {label}

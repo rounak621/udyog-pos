@@ -101,7 +101,7 @@ export default function MenuPage() {
                 items={[{ id: "all", label: "All items" }, ...(categories ?? []).map((c) => ({ id: c.id, label: c.name, hint: `${c._count.items} items${c.showOnWebsite ? "" : " · hidden"}` }))]}
               />
               {selectedCategory && (
-                <div className="flex items-center justify-between gap-2 rounded-lg bg-secondary/60 px-3 py-2">
+                <div className="flex items-center justify-between gap-2 rounded-lg bg-secondary px-3 py-2">
                   <span className="flex min-w-0 flex-col">
                     <span className="truncate text-sm font-medium text-foreground">{selectedCategory.name}</span>
                     {!selectedCategory.showOnWebsite && (

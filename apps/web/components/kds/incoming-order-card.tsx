@@ -26,7 +26,7 @@ export function IncomingOrderCard({ order, branchId }: { order: IncomingOrder; b
   const who = order.guestName || order.customer?.name || null;
 
   return (
-    <Card className="flex w-[22rem] max-w-full shrink-0 flex-col gap-3 border-primary p-4 ring-2 ring-primary/30">
+    <Card className="flex w-[22rem] max-w-full shrink-0 flex-col gap-3 border-primary p-4 ring-2 ring-primary-soft">
       <StatusNote note={note} onClear={clear} />
       <ReasonDialog
         open={declineOpen}
@@ -54,7 +54,7 @@ export function IncomingOrderCard({ order, branchId }: { order: IncomingOrder; b
           {minutesSince(order.createdAt)}m
         </span>
       </div>
-      {order.notes && <p className="rounded-lg bg-warning/10 px-2 py-1.5 text-xs text-warning">{order.notes}</p>}
+      {order.notes && <p className="rounded-lg bg-warning-soft px-2 py-1.5 text-xs text-warning">{order.notes}</p>}
       <ul className="flex flex-col gap-1.5 border-t border-border pt-3 text-sm">
         {order.items.map((item) => (
           <li key={item.id}>

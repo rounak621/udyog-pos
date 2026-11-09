@@ -46,7 +46,7 @@ export default function InventoryPage() {
       <InventoryTabs />
 
       {trackingStatus && trackingStatus.problems.length > 0 && (
-        <div role="alert" className="flex gap-3 rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm">
+        <div role="alert" className="flex gap-3 rounded-xl border border-warning bg-warning-soft p-4 text-sm">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <div className="flex flex-col gap-1">
             <p className="font-medium text-foreground">

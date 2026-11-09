@@ -28,7 +28,7 @@ export function TableRequestsBar({ branchId }: { branchId: string | null }) {
 
   if (!data || data.length === 0) return null;
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
+    <div className="flex flex-col gap-2 rounded-xl border border-primary bg-primary-soft p-3">
       {data.map((r) => (
         <div key={r.id} className="flex items-center justify-between gap-3 text-sm">
           <span className="flex items-center gap-2 text-foreground">

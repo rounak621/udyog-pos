@@ -59,7 +59,7 @@ export function KioskHeader({
             aria-pressed={l === locale}
             onClick={() => onLocale(l)}
             className={cn(
-              "touch-manipulation rounded-xl px-3 text-[1.05rem] font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/40",
+              "touch-manipulation rounded-xl px-3 text-[1.05rem] font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring",
               TOUCH,
               l === locale ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground hover:bg-muted",
             )}
@@ -72,7 +72,7 @@ export function KioskHeader({
         type="button"
         onClick={onCancel}
         className={cn(
-          "inline-flex touch-manipulation items-center gap-2 rounded-xl border-2 border-border px-4 text-[1.05rem] font-semibold hover:bg-secondary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/40",
+          "inline-flex touch-manipulation items-center gap-2 rounded-xl border-2 border-border px-4 text-[1.05rem] font-semibold hover:bg-secondary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring",
           TOUCH,
         )}
       >

@@ -35,7 +35,7 @@ export function QueryError({
     <div
       role="alert"
       className={cn(
-        "flex flex-col items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-8 text-center",
+        "flex flex-col items-center gap-3 rounded-xl border border-destructive bg-destructive-soft px-4 py-8 text-center",
         className,
       )}
     >

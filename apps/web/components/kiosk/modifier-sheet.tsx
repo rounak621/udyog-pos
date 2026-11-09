@@ -107,7 +107,7 @@ export function ModifierSheet({
                         onClick={() => toggle(g.id, m.id, g.maxSelect)}
                         className={cn(
                           "flex touch-manipulation select-none items-center justify-between gap-3 rounded-2xl border-2 px-4 text-left text-[1.1rem] font-medium",
-                          "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/40",
+                          "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring",
                           TOUCH,
                           "py-3",
                           on ? "border-primary bg-accent" : "border-border bg-card hover:bg-secondary",

@@ -98,7 +98,7 @@ export function AppShell({
       </Sheet>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur sm:px-6">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background px-4 backdrop-blur sm:px-6">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}

@@ -228,7 +228,7 @@ function OrderRow({
     <div
       className={cn(
         "flex items-start gap-1 rounded-lg transition-colors duration-150 motion-reduce:transition-none",
-        selected && "bg-primary/5",
+        selected && "bg-primary-soft",
       )}
     >
       {selectable && (
@@ -243,7 +243,7 @@ function OrderRow({
     <button
       type="button"
       onClick={() => openEntity("Order", order.id)}
-      className="flex flex-1 items-start justify-between gap-4 rounded-lg px-4 py-3 text-left transition hover:bg-secondary/50"
+      className="flex flex-1 items-start justify-between gap-4 rounded-lg px-4 py-3 text-left transition hover:bg-secondary"
     >
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">

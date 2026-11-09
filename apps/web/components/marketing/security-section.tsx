@@ -31,7 +31,7 @@ const points = [
 
 export function SecuritySection() {
   return (
-    <section id="security" className="border-y border-border/60 bg-muted/30 px-4 py-24 sm:px-6">
+    <section id="security" className="border-y border-border bg-muted px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
@@ -47,9 +47,9 @@ export function SecuritySection() {
           {points.map((p) => (
             <RevealItem
               key={p.title}
-              className="flex gap-4 rounded-2xl border border-border/60 bg-card p-6"
+              className="flex gap-4 rounded-2xl border border-border bg-card p-6"
             >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
                 <p.icon className="size-5" />
               </div>
               <div>

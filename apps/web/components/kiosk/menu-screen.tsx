@@ -99,7 +99,7 @@ export function MenuScreen({
                 }}
                 className={cn(
                   "shrink-0 touch-manipulation select-none rounded-2xl px-4 text-left text-[1.2rem] font-semibold leading-tight",
-                  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/40",
+                  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring",
                   "py-3",
                   on ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground hover:bg-muted",
                 )}
@@ -124,7 +124,7 @@ export function MenuScreen({
                 onChange={(e) => setQuery(e.target.value.slice(0, 40))}
                 placeholder={t("kiosk.menu.search")}
                 className={cn(
-                  "w-full select-text rounded-2xl border-2 border-border bg-card pl-12 pr-14 text-[1.15rem] focus-visible:border-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/30",
+                  "w-full select-text rounded-2xl border-2 border-border bg-card pl-12 pr-14 text-[1.15rem] focus-visible:border-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring",
                   "py-3",
                 )}
               />
@@ -167,7 +167,7 @@ export function MenuScreen({
                             <Plus className="h-5 w-5" aria-hidden />
                             {t("kiosk.menu.add")}
                             {qty > 0 && (
-                              <span className="ml-1 rounded-full bg-primary-foreground/25 px-2 text-[0.95rem] tabular-nums">×{qty}</span>
+                              <span className="ml-1 rounded-full bg-primary-hover px-2 text-[0.95rem] tabular-nums">×{qty}</span>
                             )}
                           </KButton>
                         </div>

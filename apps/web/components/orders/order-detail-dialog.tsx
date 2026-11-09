@@ -117,7 +117,7 @@ export function OrderDetailDialog({
               </div>
             </div>
 
-            <div className="flex flex-col gap-1 rounded-lg bg-secondary/40 px-3 py-2">
+            <div className="flex flex-col gap-1 rounded-lg bg-secondary px-3 py-2">
               <div className="flex items-center justify-between text-muted-foreground">
                 <span>Subtotal</span>
                 <span className="tabular-nums">{formatCurrency(order.subtotal)}</span>
@@ -162,7 +162,7 @@ export function OrderDetailDialog({
             </div>
 
             {order.notes && (
-              <p className="rounded-lg bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+              <p className="rounded-lg bg-secondary px-3 py-2 text-xs text-muted-foreground">
                 Note: {order.notes}
               </p>
             )}
@@ -182,18 +182,18 @@ export function OrderDetailDialog({
               </div>
             )}
             {pending && !canAnswer && (
-              <p className="rounded-lg bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+              <p className="rounded-lg bg-secondary px-3 py-2 text-xs text-muted-foreground">
                 Waiting for someone with permission to accept or decline orders.
               </p>
             )}
             {order.status === "CANCELLED" && (
-              <p className="rounded-lg bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+              <p className="rounded-lg bg-secondary px-3 py-2 text-xs text-muted-foreground">
                 {CANCEL_SOURCE_LABEL[order.cancelSource ?? "STAFF"]}
                 {order.cancelReason ? `: ${order.cancelReason}` : ""}
               </p>
             )}
             {order.status === "PAID" && (
-              <p className="rounded-lg bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+              <p className="rounded-lg bg-secondary px-3 py-2 text-xs text-muted-foreground">
                 This bill is paid. To correct it, issue a refund from the Dashboard — paid bills are never edited in place.
               </p>
             )}

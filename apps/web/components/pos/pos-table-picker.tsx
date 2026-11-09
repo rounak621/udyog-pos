@@ -12,9 +12,9 @@ import type { Floor, RestaurantTable } from "@/hooks/use-tables";
 import { cn } from "@/lib/utils";
 
 const STATUS_STYLES: Record<TableStatusDto, string> = {
-  AVAILABLE: "bg-success/10 border-success/30 text-success hover:bg-success/15",
-  OCCUPIED: "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15",
-  RESERVED: "bg-warning/10 border-warning/30 text-warning hover:bg-warning/15",
+  AVAILABLE: "bg-success-soft border-success text-success hover:bg-success-soft",
+  OCCUPIED: "bg-primary-soft border-primary text-primary hover:bg-primary-soft",
+  RESERVED: "bg-warning-soft border-warning text-warning hover:bg-warning-soft",
   CLEANING: "bg-muted border-border text-muted-foreground",
   OUT_OF_SERVICE: "bg-muted border-border text-muted-foreground opacity-50",
 };
@@ -109,7 +109,7 @@ export function PosTablePicker({
                 <Users className="h-3 w-3" />
                 {table.capacity}
               </span>
-              <span className="hidden rounded-full bg-background/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide lg:inline">
+              <span className="hidden rounded-full bg-background px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide lg:inline">
                 {table.status === "OUT_OF_SERVICE" ? "Out of service" : table.status.toLowerCase()}
               </span>
               {(table.status === "OCCUPIED" || table.status === "RESERVED") && (

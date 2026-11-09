@@ -150,7 +150,7 @@ export function CartPanel({
       )}
 
       {checkingTable && (
-        <p role="status" className="rounded-lg bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
+        <p role="status" className="rounded-lg bg-secondary px-3 py-2 text-xs text-muted-foreground">
           Checking this table&apos;s open bills…
         </p>
       )}
@@ -173,7 +173,7 @@ export function CartPanel({
         </div>
       )}
       {existingOrderNumber && (
-        <div className="flex items-center justify-between gap-3 rounded-lg bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-secondary px-3 py-2 text-xs text-muted-foreground">
           <span>
             This table already has open order{" "}
             <span className="font-medium text-foreground">#{existingOrderNumber}</span>

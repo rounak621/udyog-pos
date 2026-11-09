@@ -55,7 +55,7 @@ export function PaymentMethodButtons<T extends string>({
             className={cn(
               "flex flex-col items-center gap-1 rounded-xl border px-2 py-2.5 text-xs font-medium transition-colors",
               active
-                ? "border-primary bg-primary/10 text-foreground shadow-sm"
+                ? "border-primary bg-primary-soft text-foreground shadow-sm"
                 : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground",
             )}
           >

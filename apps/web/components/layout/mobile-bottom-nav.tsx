@@ -41,7 +41,7 @@ export function MobileBottomNav({
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-background pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
     >
       {primary.map((item) => {
         const isActive = pathname?.startsWith(item.href);

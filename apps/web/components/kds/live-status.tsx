@@ -19,7 +19,7 @@ export function LiveStatus() {
   return (
     <div className="flex flex-col gap-2">
       {state === "offline" && (
-        <p role="status" className="flex items-center gap-2 rounded-lg bg-warning/10 px-3 py-2 text-sm text-warning">
+        <p role="status" className="flex items-center gap-2 rounded-lg bg-warning-soft px-3 py-2 text-sm text-warning">
           <WifiOff className="h-4 w-4 shrink-0" aria-hidden />
           Live updates are paused - reconnecting. Tickets still refresh every few seconds; nothing is lost.
         </p>

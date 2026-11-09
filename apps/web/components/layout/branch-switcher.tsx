@@ -17,7 +17,7 @@ export function BranchSwitcher() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex w-full items-center gap-2 rounded-xl border border-sidebar-border bg-sidebar px-3 py-2 text-left text-sm hover:bg-sidebar-accent/50">
+      <DropdownMenuTrigger className="flex w-full items-center gap-2 rounded-xl border border-sidebar-border bg-sidebar px-3 py-2 text-left text-sm hover:bg-sidebar-accent">
         <Store className="h-4 w-4 shrink-0 text-muted-foreground" />
         <span className="flex-1 truncate font-medium text-sidebar-foreground">
           {current?.name ?? "Select branch"}

@@ -29,7 +29,7 @@ export function NewApiKeyDialog({ token, onClose }: { token: string; onClose: ()
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-3">
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted p-3">
           <code className="flex-1 overflow-x-auto whitespace-nowrap font-mono text-sm text-foreground">{token}</code>
           <Button type="button" size="icon-sm" variant="outline" onClick={onCopy}>
             {copied ? <CheckIcon className="text-primary" /> : <CopyIcon />}

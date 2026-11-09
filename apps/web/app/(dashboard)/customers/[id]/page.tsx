@@ -77,7 +77,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="flex items-center gap-3 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10 text-warning">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning-soft text-warning">
             <Star className="h-5 w-5" />
           </div>
           <div>
@@ -88,7 +88,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </Card>
         <Card className="flex items-center gap-3 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success-soft text-success">
             <Gift className="h-5 w-5" />
           </div>
           <div>
@@ -99,7 +99,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </Card>
         <Card className="flex items-center gap-3 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft text-primary">
             <CreditCard className="h-5 w-5" />
           </div>
           <div>

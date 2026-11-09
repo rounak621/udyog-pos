@@ -31,7 +31,7 @@ const columns = [
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-border/60 px-4 py-14 sm:px-6">
+    <footer className="border-t border-border px-4 py-14 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-10 sm:grid-cols-[1.5fr_repeat(3,1fr)]">
           <div>
@@ -65,7 +65,7 @@ export function MarketingFooter() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 sm:flex-row">
           <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} Nodedr Infotech Private Limited. Licensed AGPL-3.0.
           </p>

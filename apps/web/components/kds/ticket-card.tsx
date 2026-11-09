@@ -75,8 +75,8 @@ export function TicketCard({ ticket, branchId }: { ticket: KotTicket; branchId: 
     <Card
       className={cn(
         "flex shrink-0 flex-col gap-3 p-4",
-        (isLate || ticket.isPriority) && "border-warning/50 ring-1 ring-warning/30",
-        isFresh && "border-primary ring-2 ring-primary/40 motion-safe:animate-pulse",
+        (isLate || ticket.isPriority) && "border-warning ring-1 ring-warning-soft",
+        isFresh && "border-primary ring-2 ring-primary-soft motion-safe:animate-pulse",
       )}
     >
       <StatusNote note={note} onClear={clearNote} />
@@ -129,7 +129,7 @@ export function TicketCard({ ticket, branchId }: { ticket: KotTicket; branchId: 
         <div
           className={cn(
             "flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium tabular-nums",
-            isLate ? "bg-warning/15 text-warning" : "bg-secondary text-muted-foreground",
+            isLate ? "bg-warning-soft text-warning" : "bg-secondary text-muted-foreground",
           )}
         >
           <Timer className="h-3 w-3" />
@@ -138,7 +138,7 @@ export function TicketCard({ ticket, branchId }: { ticket: KotTicket; branchId: 
       </button>
 
       {ticket.order.notes && (
-        <p className="flex items-start gap-1 rounded-lg bg-warning/10 px-2 py-1.5 text-xs text-warning">
+        <p className="flex items-start gap-1 rounded-lg bg-warning-soft px-2 py-1.5 text-xs text-warning">
           <Flame className="mt-0.5 h-3 w-3 shrink-0" /> {ticket.order.notes}
         </p>
       )}

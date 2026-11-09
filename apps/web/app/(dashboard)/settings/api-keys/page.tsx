@@ -71,9 +71,9 @@ function StaffApiKeysCard() {
         </Button>
       </div>
 
-      <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+      <div className="rounded-lg border border-border bg-muted p-3 text-sm text-muted-foreground">
         <p className="font-medium text-foreground">MCP server URL</p>
-        <code className="mt-1 block overflow-x-auto rounded bg-background/60 p-2 font-mono text-xs">
+        <code className="mt-1 block overflow-x-auto rounded bg-background p-2 font-mono text-xs">
           {typeof window !== "undefined" ? window.location.origin : ""}/api/v1/mcp
         </code>
         <p className="mt-2">

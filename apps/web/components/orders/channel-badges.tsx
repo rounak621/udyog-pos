@@ -9,7 +9,7 @@ export function ChannelBadge({ channel }: { channel: "STAFF" | "ONLINE" }) {
       variant="secondary"
       className={cn(
         "font-normal",
-        online ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground",
+        online ? "bg-primary-soft text-primary" : "bg-secondary text-muted-foreground",
       )}
     >
       {online ? "Online" : "Offline"}

@@ -22,11 +22,11 @@ import { cn } from "@/lib/utils";
 
 const STATUS_STYLES: Record<ReservationStatusDto, string> = {
   RESERVED: "bg-secondary text-muted-foreground",
-  CONFIRMED: "bg-primary/10 text-primary",
-  ARRIVED: "bg-success/10 text-success",
+  CONFIRMED: "bg-primary-soft text-primary",
+  ARRIVED: "bg-success-soft text-success",
   COMPLETED: "bg-muted text-muted-foreground",
-  CANCELLED: "bg-destructive/10 text-destructive",
-  NO_SHOW: "bg-destructive/10 text-destructive",
+  CANCELLED: "bg-destructive-soft text-destructive",
+  NO_SHOW: "bg-destructive-soft text-destructive",
 };
 
 const STATUS_FLOW: ReservationStatusDto[] = [
@@ -132,7 +132,7 @@ export default function ReservationsPage() {
                     <Button
                       variant="secondary"
                       size="icon-sm"
-                      className="text-success hover:bg-success/10"
+                      className="text-success hover:bg-success-soft"
                       title="Accept reservation"
                       onClick={() => updateStatus.mutate({ id: r.id, status: "CONFIRMED" })}
                     >
@@ -141,7 +141,7 @@ export default function ReservationsPage() {
                     <Button
                       variant="secondary"
                       size="icon-sm"
-                      className="text-destructive hover:bg-destructive/10"
+                      className="text-destructive hover:bg-destructive-soft"
                       title="Reject reservation"
                       onClick={() => updateStatus.mutate({ id: r.id, status: "CANCELLED" })}
                     >

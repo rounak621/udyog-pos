@@ -20,9 +20,9 @@ import { TableQrDialog } from "./table-qr-dialog";
 import { TableShapeIcon } from "./table-shape-icon";
 
 const STATUS_STYLES: Record<TableStatusDto, string> = {
-  AVAILABLE: "bg-success/10 border-success/30 text-success",
-  OCCUPIED: "bg-primary/10 border-primary/30 text-primary",
-  RESERVED: "bg-warning/10 border-warning/30 text-warning",
+  AVAILABLE: "bg-success-soft border-success text-success",
+  OCCUPIED: "bg-primary-soft border-primary text-primary",
+  RESERVED: "bg-warning-soft border-warning text-warning",
   CLEANING: "bg-muted border-border text-muted-foreground",
   OUT_OF_SERVICE: "bg-muted border-border text-muted-foreground opacity-60",
 };

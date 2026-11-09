@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 function Code({ children }: { children: string }) {
   return (
-    <pre className="overflow-x-auto rounded-xl border border-border/60 bg-card p-4 text-[13px] leading-relaxed text-foreground">
+    <pre className="overflow-x-auto rounded-xl border border-border bg-card p-4 text-[13px] leading-relaxed text-foreground">
       <code>{children}</code>
     </pre>
   );

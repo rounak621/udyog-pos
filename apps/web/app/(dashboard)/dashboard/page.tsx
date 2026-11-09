@@ -38,9 +38,9 @@ function StatCard({
         <div
           className={cn(
             "flex h-9 w-9 items-center justify-center rounded-xl",
-            accent === "success" && "bg-success/10 text-success",
-            accent === "warning" && "bg-warning/10 text-warning",
-            !accent && "bg-primary/10 text-primary",
+            accent === "success" && "bg-success-soft text-success",
+            accent === "warning" && "bg-warning-soft text-warning",
+            !accent && "bg-primary-soft text-primary",
           )}
         >
           <Icon className="h-[18px] w-[18px]" />
@@ -200,7 +200,7 @@ export default function DashboardPage() {
                       variant="secondary"
                       className={cn(
                         "mt-0.5 w-fit text-[11px] font-normal",
-                        isOnline && "bg-primary/10 text-primary",
+                        isOnline && "bg-primary-soft text-primary",
                       )}
                     >
                       {order.type.replace("_", " ")}
@@ -274,7 +274,7 @@ function PendingOrdersBanner({ branchId }: { branchId: string | null }) {
   const { data } = useManagedOrders(branchId, "pending");
   if (!data || data.length === 0) return null;
   return (
-    <Card className="flex flex-col gap-3 border-primary/40 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <Card className="flex flex-col gap-3 border-primary bg-primary-soft p-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="text-sm font-semibold text-foreground">
           {data.length} online order{data.length === 1 ? "" : "s"} waiting for you

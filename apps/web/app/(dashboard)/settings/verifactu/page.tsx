@@ -53,13 +53,13 @@ function SettingsForm({ branchId, s }: { branchId: string; s: VerifactuSettings 
         </p>
       </div>
 
-      <div role="note" className="rounded-xl border border-border bg-muted/40 p-4 text-sm">
+      <div role="note" className="rounded-xl border border-border bg-muted p-4 text-sm">
         <strong>Implemented, not certified.</strong> UDYOG POS has not been run against the live AEAT portal and NODEDR has not issued
         its Declaración Responsable. Test with AEAT&rsquo;s pre-production portal and ask your gestor before relying on it.
       </div>
 
       {s.problems.length > 0 && (
-        <ul className="list-disc rounded-xl border border-destructive/30 bg-destructive/5 p-4 pl-8 text-sm text-destructive">
+        <ul className="list-disc rounded-xl border border-destructive bg-destructive-soft p-4 pl-8 text-sm text-destructive">
           {s.problems.map((p) => (
             <li key={p}>{p}</li>
           ))}

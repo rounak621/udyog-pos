@@ -30,7 +30,7 @@ export default function DocsIndexPage() {
   return (
     <DocPage title="Documentation" updated="30 September 2026">
       <DocSection heading="Guides">
-        <div className="flex flex-col divide-y divide-border/60 rounded-xl border border-border/60">
+        <div className="flex flex-col divide-y divide-border rounded-xl border border-border">
           {docs.map((doc) => (
             <Link
               key={doc.href}

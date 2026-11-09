@@ -57,14 +57,14 @@ export function RestoreBackupDialog({
             <DialogTitle>Restore this backup?</DialogTitle>
           </DialogHeader>
 
-          <div className="flex flex-col gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <div className="flex flex-col gap-2 rounded-lg border border-destructive bg-destructive-soft p-3 text-sm text-destructive">
             <p>
               This overwrites the entire database and uploaded files — for every
               restaurant on this instance — with the contents of the backup taken{" "}
               {new Date(backup.createdAt).toLocaleString()}. This cannot be undone.
             </p>
             <p>
-              Type <code className="rounded bg-background/50 px-1 font-mono">RESTORE</code>{" "}
+              Type <code className="rounded bg-background px-1 font-mono">RESTORE</code>{" "}
               to confirm.
             </p>
           </div>

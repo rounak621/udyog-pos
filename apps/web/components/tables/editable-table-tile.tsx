@@ -83,7 +83,7 @@ export function EditableTableTile({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       className={cn(
-        "absolute flex cursor-grab touch-none flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 text-xs font-medium text-foreground shadow-sm active:cursor-grabbing",
+        "absolute flex cursor-grab touch-none flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-primary bg-primary-soft text-xs font-medium text-foreground shadow-sm active:cursor-grabbing",
       )}
       style={{ left: posX, top: posY, width: table.width, height: table.height }}
     >

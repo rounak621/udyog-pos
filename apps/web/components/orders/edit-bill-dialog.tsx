@@ -91,7 +91,7 @@ export function EditBillDialog({
         {isLoading || !order ? (
           <Skeleton className="h-40 rounded-lg" />
         ) : !editable ? (
-          <p className="rounded-lg bg-secondary/60 px-3 py-2 text-sm text-muted-foreground">
+          <p className="rounded-lg bg-secondary px-3 py-2 text-sm text-muted-foreground">
             {order.status === "PAID"
               ? "This bill is paid, so it can't be edited. Use Refund to correct it."
               : "Only open bills can be edited."}
@@ -155,7 +155,7 @@ export function EditBillDialog({
                     </div>
                     {removing === item.id && (
                       <form
-                        className="flex flex-col gap-2 rounded-lg bg-destructive/5 p-2"
+                        className="flex flex-col gap-2 rounded-lg bg-destructive-soft p-2"
                         onSubmit={(e) => {
                           e.preventDefault();
                           removeItem.mutate(
@@ -206,7 +206,7 @@ export function EditBillDialog({
               kitchen gets a new ticket.
             </p>
 
-            <div className="flex items-center justify-between rounded-lg bg-secondary/40 px-3 py-2 text-sm">
+            <div className="flex items-center justify-between rounded-lg bg-secondary px-3 py-2 text-sm">
               <span className="text-muted-foreground">Total (incl. {formatCurrency(order.taxAmount)} tax)</span>
               <span className="font-semibold tabular-nums">{formatCurrency(order.totalAmount)}</span>
             </div>
@@ -287,7 +287,7 @@ export function EditBillDialog({
             </form>
 
             {error && (
-              <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
                 {error}
               </p>
             )}

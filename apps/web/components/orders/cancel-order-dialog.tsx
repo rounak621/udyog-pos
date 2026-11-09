@@ -120,12 +120,12 @@ export function CancelOrderDialog({
             The guest asked to cancel
           </label>
           {startedWarning && (
-            <p role="alert" className="rounded-lg bg-warning/10 px-3 py-2 text-sm text-warning">
+            <p role="alert" className="rounded-lg bg-warning-soft px-3 py-2 text-sm text-warning">
               {startedWarning}
             </p>
           )}
           {error && (
-            <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
               {error}
             </p>
           )}

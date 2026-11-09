@@ -35,7 +35,7 @@ export function ProductShowcase() {
         <div
           role="tablist"
           aria-label="Product views"
-          className="inline-flex gap-1 rounded-xl border border-border/60 bg-muted/40 p-1"
+          className="inline-flex gap-1 rounded-xl border border-border bg-muted p-1"
         >
           {views.map((v) => (
             <button
@@ -58,13 +58,13 @@ export function ProductShowcase() {
       </Reveal>
 
       <Reveal delay={0.16} className="relative mt-8">
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[0_20px_70px_-20px_rgba(0,0,0,0.35)]">
-          <div className="flex items-center gap-1.5 border-b border-border/60 bg-muted/40 px-4 py-2.5">
-            <span className="size-2.5 rounded-full bg-destructive/50" />
-            <span className="size-2.5 rounded-full bg-warning/50" />
-            <span className="size-2.5 rounded-full bg-success/50" />
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_70px_-20px_rgba(0,0,0,0.35)]">
+          <div className="flex items-center gap-1.5 border-b border-border bg-muted px-4 py-2.5">
+            <span className="size-2.5 rounded-full bg-destructive" />
+            <span className="size-2.5 rounded-full bg-warning" />
+            <span className="size-2.5 rounded-full bg-success" />
           </div>
-          <div className="relative aspect-[1440/900] w-full bg-muted/20">
+          <div className="relative aspect-[1440/900] w-full bg-muted">
             <AnimatePresence mode="wait">
               <motion.div
                 key={current.id}

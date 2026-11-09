@@ -85,9 +85,9 @@ export function Features() {
         {features.map((f) => (
           <RevealItem
             key={f.title}
-            className="group rounded-2xl border border-border/60 bg-card p-6 transition-colors hover:border-primary/40"
+            className="group rounded-2xl border border-border bg-card p-6 transition-colors hover:border-primary"
           >
-            <div className="inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-110">
+            <div className="inline-flex size-10 items-center justify-center rounded-xl bg-primary-soft text-primary transition-transform duration-200 group-hover:scale-110">
               <f.icon className="size-5" />
             </div>
             <h3 className="mt-4 text-[15px] font-semibold text-foreground">{f.title}</h3>

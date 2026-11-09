@@ -53,8 +53,8 @@ function EquipmentTab({ branchId }: { branchId: string | null }) {
               <div>
                 <p className="font-medium text-foreground">
                   {e.name}
-                  {e.overdue && <span className="ml-2 rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive">Overdue</span>}
-                  {e.dueSoon && <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">Due soon</span>}
+                  {e.overdue && <span className="ml-2 rounded-full bg-destructive-soft px-2 py-0.5 text-xs text-destructive">Overdue</span>}
+                  {e.dueSoon && <span className="ml-2 rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">Due soon</span>}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {e.location && `${e.location} · `}
