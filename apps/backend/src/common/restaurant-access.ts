@@ -41,7 +41,7 @@ export function isRestaurantAllowed(
 /**
  * 403 { code: RESTAURANT_SUSPENDED | TRIAL_EXPIRED | SUBSCRIPTION_EXPIRED,
  * message } when the restaurant may not use the app. Platform admins are
- * always let through. allowExpired (billing routes, see )
+ * always let through. allowExpired (billing routes, see @AllowWhenExpired)
  * lets an expired trial/subscription through so the owner can pay; a
  * SUSPENDED restaurant is never let through.
  */

@@ -30,7 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
       ignoreExpiration: false,
       secretOrKey: config.getOrThrow<string>('JWT_SECRET'),
-      // validate() needs the request for the  flag.
+      // validate() needs the request for the @AllowWhenExpired flag.
       passReqToCallback: true,
     });
   }
@@ -52,7 +52,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
     // Hosted mode: a suspended or expired restaurant is locked on every
     // request (403 + code). Platform admins always get through; billing
-    // routes () stay open for an expired trial/subscription.
+    // routes (@AllowWhenExpired) stay open for an expired trial/subscription.
     assertRestaurantAllowed(user.restaurant, {
       isPlatformAdmin: user.isPlatformAdmin,
       allowExpired: req?.allowWhenExpired === true,
