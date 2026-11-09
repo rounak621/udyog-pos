@@ -27,6 +27,9 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS builder
 ARG BACKEND_URL=http://backend:4000
 ENV BACKEND_URL=${BACKEND_URL}
+# Support email for the user menu (NEXT_PUBLIC_ is inlined at build time).
+ARG NEXT_PUBLIC_SUPPORT_EMAIL
+ENV NEXT_PUBLIC_SUPPORT_EMAIL=${NEXT_PUBLIC_SUPPORT_EMAIL}
 COPY packages/types packages/types
 COPY apps/web apps/web
 RUN pnpm --filter @nodedr-restaurant/types build

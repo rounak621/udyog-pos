@@ -105,6 +105,7 @@ services:
         # Next bakes rewrite destinations at BUILD time — this must be a
         # build ARG, not a runtime env (see apps/web/Dockerfile comment).
         BACKEND_URL: "http://backend:4000"
+        NEXT_PUBLIC_SUPPORT_EMAIL: ${NEXT_PUBLIC_SUPPORT_EMAIL:-}
     image: udyog-pos-web:local
     container_name: nodedr-restaurant-web
     restart: unless-stopped
