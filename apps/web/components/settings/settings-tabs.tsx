@@ -6,6 +6,7 @@ import { hasPermission, useCurrentUser } from "@/hooks/use-auth";
 import { useNavBadges } from "@/hooks/use-nav-badges";
 import { useBranch } from "@/hooks/use-branch";
 import { useSettings } from "@/hooks/use-settings";
+import { isSpainBranch } from "@/lib/region";
 import { cn } from "@/lib/utils";
 import { NavDot } from "@/components/layout/nav-dot";
 
@@ -14,8 +15,8 @@ interface SettingsTab {
   href: string;
   /** Omit to show the tab to anyone who can reach /settings at all. */
   permission?: string;
-  /** Only shown for branches in this country (ISO code). */
-  country?: string;
+  /** Only shown for Spain branches (see isSpainBranch). */
+  spainOnly?: boolean;
 }
 
 const TABS: SettingsTab[] = [
@@ -29,7 +30,7 @@ const TABS: SettingsTab[] = [
   { label: "API Keys", href: "/settings/api-keys" },
   { label: "Security", href: "/settings/security" },
   { label: "Webhooks", href: "/settings/webhooks", permission: "settings.manage" },
-  { label: "VERI*FACTU", href: "/settings/verifactu", permission: "settings.manage", country: "ES" },
+  { label: "VERI*FACTU", href: "/settings/verifactu", permission: "settings.manage", spainOnly: true },
 ];
 
 export function SettingsTabs() {
@@ -38,12 +39,12 @@ export function SettingsTabs() {
   const user = data?.user;
   const badges = useNavBadges();
   const { branchId } = useBranch();
-  const branchCountry = useSettings(branchId).data?.branch.country;
+  const branch = useSettings(branchId).data?.branch;
 
   const visibleTabs = TABS.filter(
     (tab) =>
       (!tab.permission || hasPermission(user, tab.permission)) &&
-      (!tab.country || branchCountry === tab.country),
+      (!tab.spainOnly || isSpainBranch(branch)),
   );
 
   return (

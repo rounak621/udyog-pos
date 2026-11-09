@@ -5,7 +5,7 @@ import { downloadHref } from "@/lib/downloads";
 
 export const metadata: Metadata = {
   title: "Documentation — UDYOG POS",
-  description: "API & MCP, accessibility, and India compliance docs for a self-hosted UDYOG POS instance.",
+  description: "API & MCP, accessibility, and India features docs for a self-hosted UDYOG POS instance.",
 };
 
 const docs = [
@@ -21,8 +21,8 @@ const docs = [
   },
   {
     href: "/docs/compliance-india",
-    title: "India compliance",
-    description: "GST, receipts, and data-residency notes for running UDYOG POS in India.",
+    title: "India features",
+    description: "GST, CGST/SGST/IGST, HSN/SAC, FSSAI, UPI and INR in UDYOG POS.",
   },
 ];
 

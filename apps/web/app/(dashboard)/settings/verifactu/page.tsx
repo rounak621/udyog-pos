@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { SettingsTabs } from "@/components/settings/settings-tabs";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import {
   type VerifactuSettings,
 } from "@/hooks/use-verifactu";
 import { ApiError } from "@/lib/api";
+import { isSpainBranch } from "@/lib/region";
 import { cn } from "@/lib/utils";
 
 const errMsg = (e: unknown) => (e instanceof ApiError ? e.message : "Something went wrong");
@@ -54,8 +56,7 @@ function SettingsForm({ branchId, s }: { branchId: string; s: VerifactuSettings 
       </div>
 
       <div role="note" className="rounded-xl border border-border bg-muted p-4 text-sm">
-        <strong>Implemented, not certified.</strong> UDYOG POS has not been run against the live AEAT portal and NODEDR has not issued
-        its Declaración Responsable. Test with AEAT&rsquo;s pre-production portal and ask your gestor before relying on it.
+        <strong>Implemented, not certified.</strong> UDYOG POS has not been certified for this regime. Test with AEAT&rsquo;s pre-production portal and ask your gestor before relying on it.
       </div>
 
       {s.problems.length > 0 && (
@@ -262,7 +263,13 @@ function Records({ branchId, s }: { branchId: string; s: VerifactuSettings }) {
 export default function VerifactuPage() {
   const { branchId } = useBranch();
   const { data, isLoading } = useVerifactuSettings(branchId);
-  const country = useSettings(branchId).data?.branch.country;
+  const settings = useSettings(branchId).data;
+  const router = useRouter();
+  // Spain-only page: any other branch is sent back to Settings.
+  const notSpain = !!settings && !isSpainBranch(settings.branch);
+  useEffect(() => {
+    if (notSpain) router.replace("/settings");
+  }, [notSpain, router]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -271,11 +278,7 @@ export default function VerifactuPage() {
         <p className="text-sm text-muted-foreground">Restaurant, branch, and staff configuration</p>
       </div>
       <SettingsTabs />
-      {country && country !== "ES" ? (
-        <Card className="max-w-3xl p-6 text-sm">
-          VERI*FACTU applies only to branches in Spain. Set this branch&rsquo;s country to Spain (and its tax regime to Spain &ndash; IVA) under General to use it.
-        </Card>
-      ) : isLoading || !data || !branchId ? (
+      {notSpain ? null : isLoading || !data || !branchId ? (
         <Skeleton className="h-72 max-w-3xl rounded-xl" />
       ) : (
         <>

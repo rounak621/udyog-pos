@@ -74,7 +74,7 @@ export function SecuritySection() {
             href="/docs/compliance-india"
             className="text-sm font-medium text-primary underline underline-offset-4"
           >
-            Read the India compliance notes
+            Read about the India features
           </Link>
         </Reveal>
       </div>
