@@ -81,7 +81,7 @@ export default function WebhooksPage() {
         )}
 
         <div className="flex flex-col gap-3">
-          <Input placeholder="https://example.com/orderrestro-hook" value={url} onChange={(e) => setUrl(e.target.value)} />
+          <Input placeholder="https://example.com/udyog-pos-hook" value={url} onChange={(e) => setUrl(e.target.value)} />
           <Input placeholder="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
           <div className="flex flex-wrap gap-1.5">
             {allEvents?.map((e) => (

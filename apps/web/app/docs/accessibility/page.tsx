@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { DocList, DocPage, DocSection } from "@/components/marketing/doc-page";
 
 export const metadata: Metadata = {
-  title: "Accessibility statement — Nodedr OrderRestro",
-  description: "OrderRestro's accessibility conformance target, testing methodology, and known gaps.",
+  title: "Accessibility statement — UDYOG POS",
+  description: "UDYOG POS's accessibility conformance target, testing methodology, and known gaps.",
 };
 
 export default function AccessibilityPage() {
@@ -11,7 +11,7 @@ export default function AccessibilityPage() {
     <DocPage title="Accessibility statement" updated="15 August 2026">
       <DocSection heading="Our target">
         <p>
-          Nodedr OrderRestro targets{" "}
+          UDYOG POS targets{" "}
           <strong className="text-foreground">WCAG 2.1 Level AA</strong> across
           this marketing site and the product application (POS, dashboard,
           kitchen display, settings). This is the standard referenced by
@@ -92,7 +92,7 @@ export default function AccessibilityPage() {
           If you encounter an accessibility barrier anywhere in this product,
           please open an issue on{" "}
           <a
-            href="https://github.com/Raktim94/nodedr-restaurant-pos/issues"
+            href="https://github.com/rounak621/udyog-pos/issues"
             className="text-primary underline underline-offset-4"
           >
             GitHub

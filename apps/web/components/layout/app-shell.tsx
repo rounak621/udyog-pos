@@ -47,7 +47,7 @@ function RestaurantBrand() {
     <>
       <Logo />
       <span className="truncate text-sm font-semibold tracking-tight text-sidebar-foreground">
-        {restaurant?.name ?? "Nodedr OrderRestro"}
+        {restaurant?.name ?? "UDYOG POS"}
       </span>
     </>
   );

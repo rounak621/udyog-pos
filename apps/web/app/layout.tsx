@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nodedr OrderRestro",
+  title: "UDYOG POS",
   description: "Offline-first restaurant management system",
   manifest: "/manifest.json",
   icons: {
