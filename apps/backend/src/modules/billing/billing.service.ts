@@ -16,6 +16,8 @@ import {
 import { AuditService } from '../../audit/audit.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { gstOnPaise, gstRatePercent } from './billing-config';
+import type { InvoiceSnapshot } from './billing-invoice';
+import { buildSubscriptionInvoiceHtml } from './invoice.html';
 import { RazorpayService } from './razorpay.service';
 
 /** A CREATED subscription counts as live only this long (checkout window). */
@@ -227,6 +229,19 @@ export class BillingService {
       metadata: { paymentId: dto.razorpay_payment_id },
     });
     return { ok: true };
+  }
+
+  /** Print page for one invoice of THIS restaurant (another one gets 404). */
+  async invoiceHtml(restaurantId: string, id: string) {
+    const invoice = await this.prisma.subscriptionInvoice.findFirst({
+      where: { id, restaurantId },
+    });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+    return buildSubscriptionInvoiceHtml({
+      invoiceNumber: invoice.invoiceNumber,
+      issuedAt: invoice.issuedAt,
+      snapshot: invoice.snapshot as unknown as InvoiceSnapshot,
+    });
   }
 
   async cancel(user: SessionUser) {

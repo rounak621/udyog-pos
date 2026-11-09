@@ -1,7 +1,12 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Prisma, type SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { gstRatePercent, splitInclusivePaise } from './billing-config';
+import {
+  companyDetails,
+  gstRatePercent,
+  splitInclusivePaise,
+} from './billing-config';
+import { createInvoiceForPayment } from './billing-invoice';
 import { RazorpayService } from './razorpay.service';
 
 interface RzEntity {
@@ -87,6 +92,7 @@ export class BillingWebhookService {
     if (!rzSubId) return;
     const local = await this.prisma.subscription.findUnique({
       where: { razorpaySubscriptionId: rzSubId },
+      include: { plan: { select: { name: true } } },
     });
     if (!local) {
       this.logger.warn(`billing event ${type} for an unknown subscription`);
@@ -155,12 +161,17 @@ export class BillingWebhookService {
 
   /** A successful (re)charge: record it, extend the period, unlock. */
   protected async charged(
-    local: { id: string; restaurantId: string },
+    local: {
+      id: string;
+      restaurantId: string;
+      billingCycle: 'MONTHLY' | 'YEARLY';
+      plan: { name: string };
+    },
     payment: RzEntity | undefined,
     periods: { currentPeriodStart?: Date; currentPeriodEnd?: Date },
   ) {
     await this.prisma.$transaction(async (tx) => {
-      await this.setSub(local.id, 'ACTIVE', periods, tx);
+      const sub = await this.setSub(local.id, 'ACTIVE', periods, tx);
       await activateRestaurant(tx, local.restaurantId);
       if (!payment?.id || typeof payment.amount !== 'number') return;
       const exists = await tx.subscriptionPayment.findUnique({
@@ -168,8 +179,12 @@ export class BillingWebhookService {
         select: { id: true },
       });
       if (exists) return;
-      const split = splitInclusivePaise(payment.amount, gstRatePercent());
-      await tx.subscriptionPayment.create({
+      const company = companyDetails();
+      const split = splitInclusivePaise(
+        payment.amount,
+        company?.gstRatePercent ?? gstRatePercent(),
+      );
+      const created = await tx.subscriptionPayment.create({
         data: {
           restaurantId: local.restaurantId,
           subscriptionId: local.id,
@@ -180,6 +195,22 @@ export class BillingWebhookService {
           paidAt: toDate(payment.created_at) ?? new Date(),
         },
       });
+      // GST invoice in the same transaction. Without the company details
+      // (COMPANY_* / SUBSCRIPTION_SAC / GST_RATE_PERCENT) the payment is
+      // still recorded and the UI shows "Invoice pending".
+      if (company) {
+        await createInvoiceForPayment(tx, {
+          company,
+          paymentId: created.id,
+          restaurantId: local.restaurantId,
+          description: `UDYOG POS subscription: ${local.plan.name} (${
+            local.billingCycle === 'MONTHLY' ? 'monthly' : 'yearly'
+          })`,
+          taxableValuePaise: split.taxableValuePaise,
+          taxPaise: split.taxPaise,
+          period: { start: sub.currentPeriodStart, end: sub.currentPeriodEnd },
+        });
+      }
     });
   }
 

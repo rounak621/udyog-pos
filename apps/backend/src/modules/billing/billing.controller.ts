@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Req,
+  Res,
   UsePipes,
   type RawBodyRequest,
 } from '@nestjs/common';
@@ -20,7 +21,7 @@ import {
   verifyCheckoutSchema,
   type SessionUser,
 } from '@nodedr-restaurant/types';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import { AllowWhenExpired } from '../../common/decorators/allow-when-expired.decorator';
 import { Auth } from '../../common/decorators/auth.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -91,6 +92,18 @@ export class BillingController {
   @UsePipes(new ZodValidationPipe(verifyCheckoutSchema))
   verify(@CurrentUser() user: SessionUser, @Body() body: unknown) {
     return this.billing.verify(user, body as never);
+  }
+
+  @Auth('billing.manage')
+  @AllowWhenExpired()
+  @Get('invoices/:id')
+  async invoice(
+    @CurrentUser() user: SessionUser,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const html = await this.billing.invoiceHtml(user.restaurantId, id);
+    res.type('html').send(html);
   }
 
   @Auth('billing.manage')
