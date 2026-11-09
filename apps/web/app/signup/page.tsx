@@ -58,7 +58,7 @@ export default function SignupPage() {
       >
         <div className="mb-10 flex flex-col items-center gap-2 text-center">
           <Link href="/">
-            <Logo size={44} />
+            <Logo size={64} />
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             UDYOG POS
