@@ -18,6 +18,7 @@ import {
   type SessionUser,
 } from '@nodedr-restaurant/types';
 import { Throttle } from '@nestjs/throttler';
+import { LoginThrottle } from '../common/throttle/login-throttle';
 import type { Response } from 'express';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -51,7 +52,9 @@ export class AuthController {
 
   // Tighter than the app-wide default — unauthenticated and creates a full
   // restaurant + owner account, a more attractive abuse target than login.
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  // Per IP: 20/min; per IP + email: 5/min (login throttler).
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @LoginThrottle('email')
   @Post('register')
   @UsePipes(new ZodValidationPipe(registerSchema))
   async register(
@@ -65,7 +68,9 @@ export class AuthController {
 
   // Tighter than the app-wide default (see register above) — login is a
   // classic credential-stuffing/brute-force target.
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  // Per IP: 20/min; per IP + email: 5/min (login throttler).
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @LoginThrottle('email')
   @Post('login')
   @UsePipes(new ZodValidationPipe(loginSchema))
   async login(
@@ -83,7 +88,9 @@ export class AuthController {
   // a 4-digit PIN space in well under an hour against a known userId. This
   // caps that to 5/min/IP — the same budget register() uses for its own
   // higher-value target.
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  // Per IP: 20/min; per IP + userId: 5/min (login throttler).
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @LoginThrottle('userId')
   @Post('pin-login')
   @UsePipes(new ZodValidationPipe(pinLoginSchema))
   async pinLogin(

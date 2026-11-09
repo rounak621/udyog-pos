@@ -43,12 +43,15 @@ import { IntegrationsModule } from './integrations/integrations.module';
 import { McpModule } from './mcp/mcp.module';
 import { SystemModule } from './system/system.module';
 import { VerifactuModule } from './modules/verifactu/verifactu.module';
+import { loginThrottler } from './common/throttle/login-throttle';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
+    // App-wide limit by client IP, plus the per-account login throttler
+    // (see common/throttle/login-throttle.ts).
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }, loginThrottler]),
     PrismaModule,
     RealtimeModule,
     AuthModule,

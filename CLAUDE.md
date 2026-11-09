@@ -54,3 +54,6 @@ UDYOG POS = restaurant POS, white-labelled from an AGPL-3.0 open-source repo, ow
 
 ## Platform admin
 - Grant (no API, no env var): `docker exec nodedr-restaurant-backend node dist/scripts/make-platform-admin.js you@example.com` (dev: `pnpm --filter @nodedr-restaurant/backend make-platform-admin you@example.com`). Refuses unless exactly one user has that email.
+
+## Rate limits
+- In-memory throttler: 300/min per client IP app-wide; login, register and pin-login add 20/min per IP and 5/min per IP + email (or userId). Set TRUST_PROXY behind a reverse proxy. A shared store (Redis) is a later step, needed before running more than one backend.

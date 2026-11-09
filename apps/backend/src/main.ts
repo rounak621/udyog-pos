@@ -100,6 +100,14 @@ async function bootstrap() {
   process.env.JWT_SECRET = resolveJwtSecret();
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Behind a reverse proxy, req.ip (used by every rate limit) is the proxy's
+  // address unless Express is told how many proxy hops to trust.
+  // TRUST_PROXY=1 behind a single nginx/Caddy; unset or 0 = off (direct).
+  const trustProxyHops = Number(process.env.TRUST_PROXY ?? 0);
+  if (Number.isInteger(trustProxyHops) && trustProxyHops > 0) {
+    app.set('trust proxy', trustProxyHops);
+  }
+
   app.use(
     helmet({
       // Uploaded images are fetched cross-origin-ish (via the frontend's

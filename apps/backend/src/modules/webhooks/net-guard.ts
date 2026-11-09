@@ -33,17 +33,47 @@ export function isPrivateAddress(ip: string): boolean {
     });
   }
   if (kind === 6) {
-    const lower = ip.toLowerCase();
-    // IPv4-mapped (::ffff:a.b.c.d) takes the IPv4 rules.
-    const mapped = lower.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-    if (mapped) return isPrivateAddress(mapped[1]);
-    if (lower === '::' || lower === '::1') return true;
-    if (/^f[cd]/.test(lower)) return true; // fc00::/7 unique-local
-    if (/^fe[89ab]/.test(lower)) return true; // fe80::/10 link-local
-    if (/^ff/.test(lower)) return true; // multicast
+    const g = expandIpv6(ip);
+    if (!g) return true; // unparseable: refuse
+    // IPv4 inside IPv6 takes the IPv4 rules, in any spelling (the URL parser
+    // turns ::ffff:127.0.0.1 into ::ffff:7f00:1): mapped (::ffff:0:0/96),
+    // compatible (::/96, which also covers :: and ::1), NAT64 (64:ff9b::/96)
+    // and 6to4 (2002::/16).
+    const v4 = (hi: number, lo: number) =>
+      `${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`;
+    if (g.slice(0, 5).every((x) => x === 0) && (g[5] === 0xffff || g[5] === 0))
+      return isPrivateAddress(v4(g[6], g[7]));
+    if (g[0] === 0x64 && g[1] === 0xff9b && g.slice(2, 6).every((x) => x === 0))
+      return isPrivateAddress(v4(g[6], g[7]));
+    if (g[0] === 0x2002) return isPrivateAddress(v4(g[1], g[2]));
+    if ((g[0] & 0xfe00) === 0xfc00) return true; // fc00::/7 unique-local
+    if ((g[0] & 0xffc0) === 0xfe80) return true; // fe80::/10 link-local
+    if ((g[0] & 0xff00) === 0xff00) return true; // ff00::/8 multicast
     return false;
   }
   return true; // not an IP at all: refuse
+}
+
+/** IPv6 text (any valid spelling, incl. a trailing dotted quad) to 8 groups. */
+function expandIpv6(ip: string): number[] | null {
+  let s = ip.toLowerCase().replace(/%.*$/, ''); // drop a zone id
+  const dotted = s.match(/(\d+\.\d+\.\d+\.\d+)$/);
+  if (dotted) {
+    const n = ipv4ToInt(dotted[1]);
+    s = `${s.slice(0, -dotted[1].length)}${(n >>> 16).toString(16)}:${(n & 0xffff).toString(16)}`;
+  }
+  const [head, tail, extra] = s.split('::');
+  if (extra !== undefined) return null;
+  const h = head ? head.split(':') : [];
+  const t = tail ? tail.split(':') : [];
+  const fill = tail === undefined ? 0 : 8 - h.length - t.length;
+  if (fill < 0) return null;
+  const groups = [...h, ...Array<string>(fill).fill('0'), ...t].map((x) =>
+    /^[0-9a-f]{1,4}$/.test(x) ? parseInt(x, 16) : NaN,
+  );
+  return groups.length === 8 && groups.every((x) => !Number.isNaN(x))
+    ? groups
+    : null;
 }
 
 export interface WebhookNetOptions {
