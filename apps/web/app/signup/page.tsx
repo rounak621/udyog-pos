@@ -60,9 +60,7 @@ export default function SignupPage() {
           <Link href="/">
             <Logo size={64} />
           </Link>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            UDYOG POS
-          </h1>
+          <h1 className="sr-only">UDYOG POS</h1>
           <p className="text-sm text-muted-foreground">Set up your restaurant</p>
         </div>
 

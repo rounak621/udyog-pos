@@ -98,9 +98,8 @@ export default function AccessibilityPage() {
             GitHub
           </a>{" "}
           with as much detail as you can (page, assistive technology used,
-          what you expected vs. what happened). This is an open-source
-          project — accessibility fixes are treated as real bugs, not
-          feature requests.
+          what you expected vs. what happened). Accessibility fixes are
+          treated as real bugs, not feature requests.
         </p>
       </DocSection>
     </DocPage>

@@ -56,9 +56,9 @@ const features = [
   },
   {
     icon: GitBranch,
-    title: "Open source, no lock-in",
+    title: "No lock-in",
     description:
-      "AGPL-3.0 licensed. Self-host on Docker, CasaOS/ZimaOS, or a Windows client — your data never has to leave your building.",
+      "Self-host on Docker, CasaOS/ZimaOS, or a Windows client — your data never has to leave your building.",
   },
   {
     icon: Plug,

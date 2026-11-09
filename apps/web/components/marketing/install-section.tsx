@@ -33,7 +33,7 @@ const channels = [
     channel: "github" as const,
     icon: Github,
     title: "View source",
-    description: "AGPL-3.0 licensed. Read the code, fork it, self-host it — nothing hidden.",
+    description: "Read the code, fork it, self-host it — nothing hidden.",
   },
 ];
 

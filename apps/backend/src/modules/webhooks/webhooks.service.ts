@@ -224,7 +224,7 @@ export class WebhooksService {
         payload: {
           event: 'test',
           createdAt: new Date().toISOString(),
-          data: { message: 'Hello from OrderRestro' },
+          data: { message: 'Hello from UDYOG POS' },
         },
       },
     });

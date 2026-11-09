@@ -46,9 +46,11 @@ function RestaurantBrand() {
   return (
     <>
       <Logo />
-      <span className="truncate text-sm font-semibold tracking-tight text-sidebar-foreground">
-        {restaurant?.name ?? "UDYOG POS"}
-      </span>
+      {restaurant?.name && (
+        <span className="truncate text-sm font-semibold tracking-tight text-sidebar-foreground">
+          {restaurant.name}
+        </span>
+      )}
     </>
   );
 }

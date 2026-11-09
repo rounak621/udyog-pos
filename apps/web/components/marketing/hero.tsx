@@ -26,7 +26,7 @@ export function Hero() {
           className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground"
         >
           <span className="size-1.5 rounded-full bg-success" />
-          Open source · AGPL-3.0 · self-hosted
+          Self-hosted · offline-first
         </motion.div>
 
         <h1 className="flex flex-wrap justify-center gap-x-3 text-4xl font-semibold tracking-tight text-foreground sm:text-6xl">
