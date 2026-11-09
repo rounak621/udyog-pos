@@ -96,6 +96,8 @@ export function buildReceiptHtml({
     taxMode: TaxMode;
     taxLabel: string | null;
     taxId: string | null;
+    /** India: FSSAI licence number, printed in the header when set. */
+    fssaiNumber?: string | null;
   };
   currency: string;
   order: ReceiptOrder;
@@ -250,6 +252,7 @@ export function buildReceiptHtml({
       ${esc(branch.name)}${branch.address ? `<br>${esc(branch.address)}` : ''}
       ${branch.phone ? `<br>Ph: ${esc(branch.phone)}` : ''}
       ${taxIdValue ? `<br>${esc(taxIdLabel)}: ${esc(taxIdValue)}` : ''}
+      ${isIndia && branch.fssaiNumber ? `<br>FSSAI Lic. No: ${esc(branch.fssaiNumber)}` : ''}
     </p>
     <hr class="rule">
     <p class="muted">

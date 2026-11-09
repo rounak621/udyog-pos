@@ -71,6 +71,7 @@ interface PublicMenuCategory {
 
 interface PublicMenuResponse {
   branchName: string;
+  fssaiNumber?: string | null;
   tableName: string;
   categories: PublicMenuCategory[];
 }
@@ -417,6 +418,7 @@ export default function PublicMenuPage({
 
       <footer className="border-t border-border px-5 py-6 text-center text-xs text-muted-foreground">
         {t("order.pricesIncludeTax")}
+        {data?.fssaiNumber && <p className="mt-1">FSSAI Lic. No: {data.fssaiNumber}</p>}
       </footer>
 
       {cartCount > 0 && (

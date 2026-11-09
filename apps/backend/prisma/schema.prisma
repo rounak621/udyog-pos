@@ -123,6 +123,8 @@ model Branch {
   // India GST (2026-11-09): fallback HSN/SAC printed on bills when a menu
   // item has none of its own (e.g. 996331, SAC for restaurant services).
   defaultHsnSac String?
+  // India: FSSAI food business licence number (14 digits), printed on bills.
+  fssaiNumber   String?
 
   // Online order / table-booking handling: false = staff must accept each
   // one from the dashboard; true = accepted automatically on arrival.

@@ -34,6 +34,7 @@ export interface BranchSettings {
   taxLabel: string | null;
   taxId: string | null;
   defaultHsnSac: string | null;
+  fssaiNumber: string | null;
   autoConfirmOrders: boolean;
   autoConfirmReservations: boolean;
   kioskToken: string | null;

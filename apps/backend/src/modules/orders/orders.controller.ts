@@ -451,6 +451,7 @@ export class OrdersController {
         taxMode: order.branch.taxMode,
         taxLabel: order.branch.taxLabel,
         taxId: order.branch.taxId,
+        fssaiNumber: order.branch.fssaiNumber,
       },
       order: {
         ...toEscposOrder(order, overrides),
@@ -631,6 +632,7 @@ export class OrdersController {
         taxMode: order.branch.taxMode,
         taxLabel: order.branch.taxLabel,
         taxId: order.branch.taxId,
+        fssaiNumber: order.branch.fssaiNumber,
       },
       order: {
         ...toEscposOrder(order, overrides),

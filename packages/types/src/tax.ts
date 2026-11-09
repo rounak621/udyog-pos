@@ -120,10 +120,22 @@ export const HSN_SAC_PATTERN = /^\d{4,8}$/;
 export function isValidHsnSac(value: string): boolean {
   return HSN_SAC_PATTERN.test(value);
 }
+/** FSSAI licence / registration number: exactly 14 digits. */
+export const FSSAI_PATTERN = /^\d{14}$/;
+export function isValidFssai(value: string): boolean {
+  return FSSAI_PATTERN.test(value);
+}
 /** Optional HSN/SAC: empty clears it, otherwise 4-8 digits. */
 export const hsnSacSchema = z
   .string()
   .trim()
   .refine((v) => v === "" || isValidHsnSac(v), "HSN/SAC must be 4 to 8 digits")
+  .nullable()
+  .optional();
+/** Optional FSSAI number: empty clears it, otherwise exactly 14 digits. */
+export const fssaiSchema = z
+  .string()
+  .trim()
+  .refine((v) => v === "" || isValidFssai(v), "FSSAI number must be exactly 14 digits")
   .nullable()
   .optional();

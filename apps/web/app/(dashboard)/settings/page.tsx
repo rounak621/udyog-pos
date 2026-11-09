@@ -195,6 +195,7 @@ function GeneralSettingsForm({
   const [taxLabel, setTaxLabel] = useState(branch.taxLabel ?? "");
   const [taxId, setTaxId] = useState(branch.taxId ?? "");
   const [defaultHsnSac, setDefaultHsnSac] = useState(branch.defaultHsnSac ?? "");
+  const [fssaiNumber, setFssaiNumber] = useState(branch.fssaiNumber ?? "");
 
   const preset = TAX_REGIME_PRESETS[taxRegime];
 
@@ -235,7 +236,9 @@ function GeneralSettingsForm({
         taxMode,
         taxLabel: taxLabel || null,
         taxId: taxId || null,
-        ...(taxRegime === "INDIA_GST" ? { defaultHsnSac: defaultHsnSac || null } : {}),
+        ...(taxRegime === "INDIA_GST"
+          ? { defaultHsnSac: defaultHsnSac || null, fssaiNumber: fssaiNumber || null }
+          : {}),
       },
       {
         onSuccess: () => toast.success("Branch details saved"),
@@ -507,6 +510,21 @@ function GeneralSettingsForm({
               <p className="text-xs text-muted-foreground">
                 Printed on bill lines for items without their own HSN/SAC. 996331 is the SAC for restaurant services.
               </p>
+            </div>
+          )}
+          {taxRegime === "INDIA_GST" && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="b-fssai">FSSAI licence number</Label>
+              <Input
+                id="b-fssai"
+                inputMode="numeric"
+                pattern="\d{14}"
+                maxLength={14}
+                value={fssaiNumber}
+                onChange={(e) => setFssaiNumber(e.target.value.replace(/\D/g, ""))}
+                placeholder="14 digits"
+              />
+              <p className="text-xs text-muted-foreground">Printed on bills and the QR menu when set.</p>
             </div>
           )}
           <div className="flex flex-col gap-2">

@@ -29,6 +29,9 @@ export class PublicMenuService {
     const categories = await this.menuCategoriesForBranch(branch.id);
     return {
       branchName: branch.name,
+      // India: FSSAI licence number for the menu footer (only when set).
+      fssaiNumber:
+        branch.taxRegime === 'INDIA_GST' ? branch.fssaiNumber || null : null,
       tableName: table.name ?? `Table ${table.number}`,
       categories,
     };

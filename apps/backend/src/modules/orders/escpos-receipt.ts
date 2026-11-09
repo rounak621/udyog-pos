@@ -131,6 +131,8 @@ export function buildReceiptEscPosJob({
     taxMode: TaxMode;
     taxLabel: string | null;
     taxId: string | null;
+    /** India: FSSAI licence number, printed in the header when set. */
+    fssaiNumber?: string | null;
   };
   currency: string;
   order: EscposReceiptOrder;
@@ -152,6 +154,9 @@ export function buildReceiptEscPosJob({
   if (branch.phone) w.text(`Ph: ${branch.phone}`, { align: 'center' });
   if (taxIdValue) {
     w.text(`${taxIdLabel}: ${taxIdValue}`, { align: 'center' });
+  }
+  if (branch.taxRegime === 'INDIA_GST' && branch.fssaiNumber) {
+    w.text(`FSSAI Lic. No: ${branch.fssaiNumber}`, { align: 'center' });
   }
   w.rule();
   w.text(stamp(order.createdAt, { timeZone, locale }));
