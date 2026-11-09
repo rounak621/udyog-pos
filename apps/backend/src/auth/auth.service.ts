@@ -18,6 +18,11 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { TwoFactorService } from './two-factor.service';
 
+// A throwaway bcrypt hash compared against when PIN login fails before the
+// real check, so a missing user takes about as long as a wrong PIN.
+let dummyHash: Promise<string> | null = null;
+const dummyPinHash = () => (dummyHash ??= bcrypt.hash('no-such-pin', 12));
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -46,8 +51,13 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    // Emails are kept unique across ALL restaurants by register() and staff
+    // create/update, but the DB constraint is only per restaurant. The
+    // explicit orderBy keeps this lookup deterministic (oldest account wins)
+    // if a duplicate ever slips in from before the global check existed.
     const user = await this.prisma.user.findFirst({
       where: { email: dto.email, isActive: true },
+      orderBy: { createdAt: 'asc' },
       include: {
         role: { include: { permissions: { include: { permission: true } } } },
       },
@@ -166,27 +176,29 @@ export class AuthService {
   }
 
   async pinLogin(dto: PinLoginDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: dto.userId },
+    // The user must belong to the restaurant that owns the terminal's branch.
+    // Every failure (unknown user, other restaurant, no PIN, 2FA account,
+    // wrong PIN) gets the same answer so accounts cannot be probed.
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: dto.userId,
+        isActive: true,
+        restaurant: { branches: { some: { id: dto.branchId } } },
+      },
       include: {
         role: { include: { permissions: { include: { permission: true } } } },
       },
     });
+    const fail = () => new UnauthorizedException('Invalid PIN login');
 
-    if (!user || !user.isActive || !user.pinHash) {
-      throw new UnauthorizedException('PIN login not available for this user');
-    }
     // A 4-8 digit PIN must not be a way around the second factor.
-    if (user.twoFactorEnabled) {
-      throw new UnauthorizedException(
-        'PIN login is off for accounts with two-factor authentication — sign in with your password',
-      );
+    if (!user || !user.pinHash || user.twoFactorEnabled) {
+      await bcrypt.compare(dto.pin, await dummyPinHash()); // similar timing
+      throw fail();
     }
 
     const valid = await bcrypt.compare(dto.pin, user.pinHash);
-    if (!valid) {
-      throw new UnauthorizedException('Incorrect PIN');
-    }
+    if (!valid) throw fail();
 
     return this.issueSession(user);
   }

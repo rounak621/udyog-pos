@@ -48,16 +48,7 @@ export class UsersService {
     await this.assertRoleInRestaurant(restaurantId, dto.roleId);
     await this.assertBranchesInRestaurant(restaurantId, dto.branchIds);
 
-    if (dto.email) {
-      const existing = await this.prisma.user.findFirst({
-        where: { restaurantId, email: dto.email },
-      });
-      if (existing) {
-        throw new ConflictException(
-          'A staff account with this email already exists',
-        );
-      }
-    }
+    if (dto.email) await this.assertEmailFree(dto.email);
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const user = await this.prisma.user.create({
@@ -124,6 +115,9 @@ export class UsersService {
     }
     if (dto.branchIds) {
       await this.assertBranchesInRestaurant(restaurantId, dto.branchIds);
+    }
+    if (dto.email && dto.email !== existing.email) {
+      await this.assertEmailFree(dto.email, id);
     }
 
     const passwordHash = dto.password
@@ -228,6 +222,21 @@ export class UsersService {
     });
 
     return { ok: true };
+  }
+
+  // Login looks a user up by email across the whole server, so an email may
+  // belong to only one account in ANY restaurant (same rule as register()).
+  // The DB constraint is still per restaurant; this check is the global one.
+  private async assertEmailFree(email: string, exceptUserId?: string) {
+    const taken = await this.prisma.user.findFirst({
+      where: { email, ...(exceptUserId ? { id: { not: exceptUserId } } : {}) },
+      select: { id: true },
+    });
+    if (taken) {
+      throw new ConflictException(
+        'A staff account with this email already exists',
+      );
+    }
   }
 
   private async assertRoleInRestaurant(restaurantId: string, roleId: string) {

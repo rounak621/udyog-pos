@@ -18,6 +18,8 @@ export const registerSchema = z.object({
 export type RegisterDto = z.infer<typeof registerSchema>;
 
 export const pinLoginSchema = z.object({
+  // The terminal's branch: the user must belong to that branch's restaurant.
+  branchId: z.string().min(1),
   userId: z.string(),
   pin: z.string().min(4).max(8),
 });
