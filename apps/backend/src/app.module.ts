@@ -28,6 +28,7 @@ import { ReservationsModule } from './modules/reservations/reservations.module';
 import { WaitlistModule } from './modules/waitlist/waitlist.module';
 import { PublicModule } from './modules/public/public.module';
 import { DownloadsModule } from './modules/downloads/downloads.module';
+import { PlatformModule } from './modules/platform/platform.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { GiftCardsModule } from './modules/gift-cards/gift-cards.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
@@ -74,6 +75,7 @@ import { loginThrottler } from './common/throttle/login-throttle';
     WaitlistModule,
     PublicModule,
     DownloadsModule,
+    PlatformModule,
     CustomersModule,
     GiftCardsModule,
     InventoryModule,

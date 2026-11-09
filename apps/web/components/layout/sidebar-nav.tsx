@@ -1,5 +1,6 @@
 "use client";
 
+import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { SessionUser } from "@nodedr-restaurant/types";
@@ -45,6 +46,23 @@ export function SidebarNav({
             </Link>
           );
         },
+      )}
+      {/* Platform admins only (UDYOG staff); kept out of NAV_ITEMS so it never
+          becomes a permission fallback for anyone else. */}
+      {user?.isPlatformAdmin === true && (
+        <Link
+          href="/platform"
+          onClick={onNavigate}
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+            pathname?.startsWith("/platform")
+              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+              : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          )}
+        >
+          <ShieldCheck className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />
+          Platform
+        </Link>
       )}
     </nav>
   );
