@@ -9,6 +9,7 @@ import {
   DEFAULT_ROLE_PERMISSIONS,
   PERMISSIONS,
   STAFF_ROLES,
+  resolveTrialDays,
   type LoginDto,
   type PinLoginDto,
   type RegisterDto,
@@ -115,8 +116,26 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
     const owner = await this.prisma.$transaction(async (tx) => {
+      // Hosted mode (ALLOW_SIGNUP=true): every new restaurant starts on a
+      // free trial of TRIAL_DAYS days. First local setup stays ACTIVE.
+      const hosted = process.env.ALLOW_SIGNUP === 'true';
       const restaurant = await tx.restaurant.create({
-        data: { name: dto.restaurantName },
+        data: {
+          name: dto.restaurantName,
+          ...(hosted
+            ? {
+                status: 'TRIAL' as const,
+                trialEndsAt: new Date(
+                  Date.now() +
+                    resolveTrialDays(process.env.TRIAL_DAYS) *
+                      24 *
+                      60 *
+                      60 *
+                      1000,
+                ),
+              }
+            : {}),
+        },
       });
       const branch = await tx.branch.create({
         data: { restaurantId: restaurant.id, name: dto.branchName },

@@ -40,6 +40,13 @@ enum TaxMode {
   EXCLUSIVE
 }
 
+// Hosted mode access (see getAccessState in -restaurant/types).
+enum RestaurantStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+}
+
 model Restaurant {
   id        String  @id @default(cuid())
   name      String
@@ -64,6 +71,13 @@ model Restaurant {
   // many currency units of net spend earn 1 point (floor division).
   loyaltyPointValue      Decimal @default(1) @db.Decimal(6, 2)
   loyaltyEarnPerCurrency Int     @default(100)
+
+  // Hosted mode: TRIAL (until trialEndsAt), ACTIVE, or SUSPENDED by the
+  // platform admin. Data is never deleted when a restaurant is locked.
+  status          RestaurantStatus @default(ACTIVE)
+  trialEndsAt     DateTime?
+  suspendedAt     DateTime?
+  suspendedReason String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
