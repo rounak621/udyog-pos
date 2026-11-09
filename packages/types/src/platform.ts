@@ -34,6 +34,8 @@ export interface PlatformRestaurantRow {
   suspendedAt: string | null;
   suspendedReason: string | null;
   daysLeft: number | null;
+  planName: string | null;
+  subscriptionStatus: string | null;
 }
 
 export interface PlatformRestaurantPage {

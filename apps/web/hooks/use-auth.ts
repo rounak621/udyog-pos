@@ -21,6 +21,7 @@ export function useCurrentUser() {
           trialEndsAt: string | null;
           daysLeft: number | null;
         } | null;
+        billingEnabled?: boolean;
       }>("/auth/me"),
     retry: false,
   });

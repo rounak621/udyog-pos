@@ -63,6 +63,13 @@ export class PlatformService {
           suspendedReason: true,
           _count: { select: { branches: true, users: true } },
           // The owner: the earliest-created user holding the OWNER role.
+          // Latest subscription (not an abandoned checkout): plan + status.
+          subscriptions: {
+            where: { status: { not: 'CREATED' } },
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            select: { status: true, plan: { select: { name: true } } },
+          },
           users: {
             where: { role: { name: 'OWNER' } },
             orderBy: { createdAt: 'asc' },
@@ -86,6 +93,8 @@ export class PlatformService {
         suspendedAt: r.suspendedAt,
         suspendedReason: r.suspendedReason,
         daysLeft: getAccessState(r, now).daysLeft,
+        planName: r.subscriptions[0]?.plan.name ?? null,
+        subscriptionStatus: r.subscriptions[0]?.status ?? null,
       })),
       total,
       page: query.page,

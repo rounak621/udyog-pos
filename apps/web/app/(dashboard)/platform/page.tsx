@@ -4,6 +4,7 @@ import type { PlatformRestaurantRow, RestaurantStatus } from "@nodedr-restaurant
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { PlatformTabs } from "@/components/platform/platform-tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,7 @@ export default function PlatformPage() {
         <h1 className="text-[32px] font-semibold tracking-tight text-foreground">Platform</h1>
         <p className="text-sm text-muted-foreground">Restaurants on this server and their account status</p>
       </div>
+      <PlatformTabs />
 
       <form
         className="flex max-w-md gap-2"
@@ -92,6 +94,8 @@ export default function PlatformPage() {
               <TableHead className="text-right">Users</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Plan</TableHead>
+              <TableHead>Subscription</TableHead>
               <TableHead>Trial ends</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -112,6 +116,8 @@ export default function PlatformPage() {
                     {r.status}
                   </span>
                 </TableCell>
+                <TableCell>{r.planName ?? "—"}</TableCell>
+                <TableCell>{r.subscriptionStatus?.replace("_", " ") ?? "—"}</TableCell>
                 <TableCell>
                   {fmtDate(r.trialEndsAt)}
                   {r.daysLeft != null && r.status === "TRIAL" ? ` (${r.daysLeft}d)` : ""}
@@ -145,7 +151,7 @@ export default function PlatformPage() {
             ))}
             {data && data.items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-sm text-muted-foreground">
+                <TableCell colSpan={10} className="text-center text-sm text-muted-foreground">
                   No restaurants found
                 </TableCell>
               </TableRow>

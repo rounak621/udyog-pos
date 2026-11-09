@@ -32,6 +32,7 @@ const TABS: SettingsTab[] = [
   { label: "API Keys", href: "/settings/api-keys" },
   { label: "Security", href: "/settings/security" },
   { label: "Webhooks", href: "/settings/webhooks", permission: "settings.manage" },
+  { label: "Billing", href: "/settings/billing", permission: "billing.manage" },
   { label: "VERI*FACTU", href: "/settings/verifactu", permission: "settings.manage", spainOnly: true },
 ];
 

@@ -1,5 +1,6 @@
 import type { AccessBlockCode } from "@nodedr-restaurant/types";
 import Link from "next/link";
+import { BlockedBilling } from "@/components/billing/blocked-billing";
 import { Logo } from "@/components/layout/logo";
 import { SUPPORT_EMAIL } from "@/lib/support";
 
@@ -22,7 +23,7 @@ export default async function AccountBlockedPage({
     MESSAGES[code as AccessBlockCode] ?? MESSAGES.RESTAURANT_SUSPENDED;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-4 py-10">
       <div className="flex w-full max-w-sm flex-col items-center gap-6 rounded-xl border border-border bg-card p-8 text-center">
         <Logo size={48} />
         <p className="text-base text-foreground">{message}</p>
@@ -38,6 +39,7 @@ export default async function AccountBlockedPage({
           Back to sign in
         </Link>
       </div>
+      {(code === "TRIAL_EXPIRED" || code === "SUBSCRIPTION_EXPIRED") && <BlockedBilling />}
     </div>
   );
 }

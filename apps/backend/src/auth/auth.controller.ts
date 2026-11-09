@@ -25,6 +25,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { Auth } from '../common/decorators/auth.decorator';
 import { AuthService } from './auth.service';
+import { razorpayKeys } from '../modules/billing/billing-config';
 import { TwoFactorService } from './two-factor.service';
 
 const SESSION_COOKIE = 'udyog_session';
@@ -163,7 +164,8 @@ export class AuthController {
     const restaurant = await this.authService.restaurantAccess(
       user.restaurantId,
     );
-    return { user, restaurant };
+    // Online payment is available (Razorpay keys set): shows "Choose a plan".
+    return { user, restaurant, billingEnabled: razorpayKeys() !== null };
   }
 
   // Public and unauthenticated — the marketing/login page needs this before
