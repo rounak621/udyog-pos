@@ -106,8 +106,9 @@ fi
 # seed.ts is upsert-based throughout, so this is safe to run on every install/
 # re-install without duplicating or clobbering anything.
 if [ "$load_demo" = true ]; then
+  echo "WARNING: Demo data has public passwords. Never use on a real restaurant." >&2
   echo "Loading demo data (restaurant, menu, staff logins)..."
-  docker exec nodedr-restaurant-backend npx ts-node prisma/seed.ts
+  docker exec -e ALLOW_DEMO_SEED=true nodedr-restaurant-backend npx ts-node prisma/seed.ts
 fi
 
 # --- 6. Done -----------------------------------------------------------------

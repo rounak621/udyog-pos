@@ -29,6 +29,16 @@ function priceLine(
 const prisma = new PrismaClient();
 
 async function main() {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    process.env.ALLOW_DEMO_SEED !== 'true'
+  ) {
+    console.error(
+      'Refusing to seed demo data: NODE_ENV=production and ALLOW_DEMO_SEED is not "true" (demo accounts have public passwords).',
+    );
+    process.exitCode = 1;
+    return;
+  }
   console.log('Seeding permissions...');
   for (const permission of PERMISSIONS) {
     await prisma.permission.upsert({

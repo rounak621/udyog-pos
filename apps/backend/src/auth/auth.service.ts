@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -69,6 +70,15 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
+    // Sign-up is first-time setup only, unless ALLOW_SIGNUP=true (hosted mode).
+    if (
+      process.env.ALLOW_SIGNUP !== 'true' &&
+      (await this.hasAnyRestaurant())
+    ) {
+      throw new ForbiddenException(
+        'Sign-up is closed. Ask your restaurant owner to add you as staff.',
+      );
+    }
     const existing = await this.prisma.user.findFirst({
       where: { email: dto.email },
     });

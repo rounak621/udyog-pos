@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: nodedr
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nodedr_dev_pw}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: nodedr_restaurant
     # Not published to the host — only the backend needs it, over the
     # internal Docker network. Uncomment `ports` below for local psql access.
@@ -32,7 +32,7 @@ services:
     container_name: nodedr-restaurant-backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: "postgresql://nodedr:${POSTGRES_PASSWORD:-nodedr_dev_pw}@postgres:5432/nodedr_restaurant"
+      DATABASE_URL: "postgresql://nodedr:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/nodedr_restaurant"
       JWT_SECRET: ${JWT_SECRET:?set a real JWT_SECRET in .env for anything beyond local dev}
       JWT_EXPIRES_IN: "12h"
       PORT: "4000"

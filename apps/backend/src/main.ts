@@ -132,6 +132,15 @@ async function bootstrap() {
     SwaggerModule.setup('api/docs', app, document);
   }
 
+  if (
+    process.env.NODE_ENV === 'production' &&
+    process.env.COOKIE_SECURE !== 'true'
+  ) {
+    console.warn(
+      'COOKIE_SECURE is off. Use HTTPS and set COOKIE_SECURE=true for internet-facing installs.',
+    );
+  }
+
   const port = process.env.PORT ?? 4000;
   await app.listen(port);
   console.log(

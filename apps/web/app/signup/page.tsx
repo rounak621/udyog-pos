@@ -5,6 +5,7 @@ import { registerSchema, type RegisterDto } from "@nodedr-restaurant/types";
 import { motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Logo } from "@/components/layout/logo";
@@ -13,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { useRegister } from "@/hooks/use-auth";
+import { useSetupStatus } from "@/hooks/use-setup-status";
 import { ApiError } from "@/lib/api";
 
 export default function SignupPage() {
@@ -24,6 +26,12 @@ export default function SignupPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterDto>({ resolver: zodResolver(registerSchema) });
+  const { data: setupStatus } = useSetupStatus();
+
+  // Sign-up is first-time setup only; once a restaurant exists, go to login.
+  useEffect(() => {
+    if (setupStatus?.isSetup) router.replace("/login");
+  }, [setupStatus?.isSetup, router]);
 
   const onSubmit = (dto: RegisterDto) => {
     register.mutate(dto, {
@@ -33,6 +41,8 @@ export default function SignupPage() {
       },
     });
   };
+
+  if (setupStatus?.isSetup) return null;
 
   return (
     <main className="relative flex flex-1 items-center justify-center overflow-hidden bg-background px-4 py-10">
