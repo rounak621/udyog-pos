@@ -3,40 +3,37 @@ using System.Runtime.InteropServices;
 namespace UdyogPos.Shell;
 
 /// <summary>
-/// First-run (and "change server") dialog: the UDYOG POS server
-/// server address on the LAN, e.g. 192.168.1.50 or 192.168.1.50:1995. No
-/// cloud account, no bundled server — this app is a pure client, per the
-/// hardening brief's offline-first / LAN-server requirement.
-///
-/// Designed for non-technical restaurant staff, not IT admins: accepts a
-/// bare IP/hostname (fills in http:// and the default port automatically —
-/// see AppConfig.TryNormalizeServerUrl), and actually tests the connection
-/// (AppConfig.TestConnectionAsync) before accepting it, so a typo is caught
-/// here with a plain-language reason instead of surfacing later as a blank
-/// WebView2 navigation failure.
+/// First-run and Ctrl+Shift+S form: the UDYOG POS server address (HTTPS
+/// origin, see AppConfig.TryNormalizeServerUrl) and the start-at-sign-in
+/// option. The address is checked against GET /api/health before saving
+/// unless the user chooses "Save without checking". No credentials here:
+/// sign-in happens in the web app.
 /// </summary>
 internal sealed class ServerSettingsForm : Form
 {
     private readonly TextBox _urlBox;
     private readonly Label _statusLabel;
-    private readonly Button _connectButton;
+    private readonly Button _saveButton;
     private readonly LinkLabel _skipTestLink;
+    private readonly CheckBox _autoStartBox;
+    private bool _autoStartLoading = true;
     private CancellationTokenSource? _testCts;
 
     public string? Result { get; private set; }
 
-    public ServerSettingsForm(string? currentUrl)
+    public ServerSettingsForm(string? currentUrl, string shellVersion)
     {
-        Text = "Connect to UDYOG POS";
+        Text = "UDYOG POS settings";
         FormBorderStyle = FormBorderStyle.FixedDialog;
         StartPosition = FormStartPosition.CenterScreen;
         MaximizeBox = false;
         MinimizeBox = false;
-        ClientSize = new Size(460, 232);
+        ClientSize = new Size(460, 300);
+        Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Application;
 
         var titleLabel = new Label
         {
-            Text = "Connect to your UDYOG POS server",
+            Text = "UDYOG POS server address",
             Font = new Font("Segoe UI", 11f, FontStyle.Bold),
             AutoSize = false,
             Location = new Point(20, 16),
@@ -45,76 +42,117 @@ internal sealed class ServerSettingsForm : Form
 
         var helpLabel = new Label
         {
-            Text = "Ask your manager or IT admin for this address if you don't have it.\n" +
-                   "Just the IP is enough — e.g. 192.168.1.50.",
+            Text = "Ask UDYOG support for this address if you don't have it.",
             AutoSize = false,
             ForeColor = SystemColors.GrayText,
             Location = new Point(20, 44),
-            Size = new Size(420, 36),
+            Size = new Size(420, 20),
         };
 
         _urlBox = new TextBox
         {
-            Location = new Point(20, 88),
+            Location = new Point(20, 70),
             Size = new Size(420, 24),
             Text = currentUrl ?? string.Empty,
             Font = new Font("Segoe UI", 10f),
         };
-        SetCueBanner(_urlBox, "e.g. 192.168.1.50 or 192.168.1.50:1995");
+        SetCueBanner(_urlBox, "https://pos.example.com");
 
         _statusLabel = new Label
         {
             AutoSize = false,
-            Location = new Point(20, 118),
-            Size = new Size(420, 20),
+            Location = new Point(20, 100),
+            Size = new Size(420, 36),
             Font = new Font("Segoe UI", 9f),
         };
 
         _skipTestLink = new LinkLabel
         {
-            Text = "Server's fine, just connect without checking",
+            Text = "Save without checking",
             AutoSize = true,
-            Location = new Point(20, 144),
+            Location = new Point(20, 140),
             Font = new Font("Segoe UI", 8.5f),
         };
-        _skipTestLink.LinkClicked += async (_, _) => await ConnectAsync(skipTest: true);
+        _skipTestLink.LinkClicked += async (_, _) => await SaveAsync(skipTest: true);
 
-        _connectButton = new Button
+        _autoStartBox = new CheckBox
         {
-            Text = "Connect",
-            Location = new Point(268, 182),
+            Text = "Start UDYOG POS when I sign in to Windows",
+            AutoSize = true,
+            Location = new Point(20, 176),
+            Font = new Font("Segoe UI", 9.5f),
+            Enabled = false, // enabled once the current state is known
+        };
+        _autoStartBox.CheckedChanged += async (_, _) => await ToggleAutoStartAsync();
+
+        _saveButton = new Button
+        {
+            Text = "Save",
+            Location = new Point(268, 216),
             Size = new Size(84, 30),
             DialogResult = DialogResult.None,
         };
-        _connectButton.Click += async (_, _) => await ConnectAsync(skipTest: false);
+        _saveButton.Click += async (_, _) => await SaveAsync(skipTest: false);
 
         var cancelButton = new Button
         {
             Text = "Cancel",
-            Location = new Point(360, 182),
+            Location = new Point(360, 216),
             Size = new Size(80, 30),
             DialogResult = DialogResult.Cancel,
         };
 
-        AcceptButton = _connectButton;
+        var versionLabel = new Label
+        {
+            Text = $"UDYOG POS for Windows, version {shellVersion}",
+            AutoSize = false,
+            ForeColor = SystemColors.GrayText,
+            Location = new Point(20, 268),
+            Size = new Size(420, 20),
+            Font = new Font("Segoe UI", 8.5f),
+        };
+
+        AcceptButton = _saveButton;
         CancelButton = cancelButton;
 
-        Controls.Add(titleLabel);
-        Controls.Add(helpLabel);
-        Controls.Add(_urlBox);
-        Controls.Add(_statusLabel);
-        Controls.Add(_skipTestLink);
-        Controls.Add(_connectButton);
-        Controls.Add(cancelButton);
+        Controls.AddRange(new Control[]
+        {
+            titleLabel, helpLabel, _urlBox, _statusLabel, _skipTestLink,
+            _autoStartBox, _saveButton, cancelButton, versionLabel,
+        });
+
+        Shown += async (_, _) =>
+        {
+            _autoStartBox.Checked = await AutoStart.IsEnabledAsync();
+            _autoStartLoading = false;
+            _autoStartBox.Enabled = true;
+        };
     }
 
-    private async Task ConnectAsync(bool skipTest)
+    private async Task ToggleAutoStartAsync()
+    {
+        if (_autoStartLoading) return;
+        var wanted = _autoStartBox.Checked;
+        _autoStartBox.Enabled = false;
+        var error = await AutoStart.SetEnabledAsync(wanted);
+        if (error is not null)
+        {
+            _autoStartLoading = true;
+            _autoStartBox.Checked = !wanted; // revert the tick, nothing changed
+            _autoStartLoading = false;
+            SetStatus(error, isError: true);
+        }
+        _autoStartBox.Enabled = true;
+    }
+
+    private async Task SaveAsync(bool skipTest)
     {
         if (!AppConfig.TryNormalizeServerUrl(_urlBox.Text, out var normalized, out var error))
         {
             SetStatus(error!, isError: true);
             return;
         }
+        _urlBox.Text = normalized;
 
         if (skipTest)
         {
@@ -132,14 +170,8 @@ internal sealed class ServerSettingsForm : Form
         if (cts.IsCancellationRequested) return; // superseded by a newer attempt
 
         SetBusy(false);
-        if (ok)
-        {
-            Accept(normalized);
-        }
-        else
-        {
-            SetStatus(message, isError: true);
-        }
+        if (ok) Accept(normalized);
+        else SetStatus(message, isError: true);
     }
 
     private void Accept(string normalized)
@@ -152,9 +184,9 @@ internal sealed class ServerSettingsForm : Form
     private void SetBusy(bool busy)
     {
         _urlBox.Enabled = !busy;
-        _connectButton.Enabled = !busy;
+        _saveButton.Enabled = !busy;
         _skipTestLink.Enabled = !busy;
-        _connectButton.Text = busy ? "Checking…" : "Connect";
+        _saveButton.Text = busy ? "Checking…" : "Save";
     }
 
     private void SetStatus(string text, bool isError)

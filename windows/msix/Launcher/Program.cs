@@ -38,7 +38,7 @@ internal static class Program
         using var activateEvent = new EventWaitHandle(initialState: false, EventResetMode.AutoReset, ActivateEventName);
 
         ApplicationConfiguration.Initialize();
-        Application.Run(new MainForm(activateEvent));
+        Application.Run(new ShellWindow(AppConfig.Load(), isMain: true, placementKey: "main", activateEvent: activateEvent));
     }
 
     private static void ReportFatal(Exception ex)

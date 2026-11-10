@@ -29,7 +29,9 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <!-- 10.0.17763 (Windows 10 1809, the MSIX MinVersion) for the WinRT
+         StartupTask API used by AutoStart.cs. -->
+    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -60,6 +62,19 @@
     <Company>UDYOG</Company>
     <Copyright>Copyright © Nodedr Infotech Private Limited</Copyright>
   </PropertyGroup>
+
+  <!-- Optional pre-fill for the first-run server form:
+       dotnet publish -p:DefaultServerUrl=https://pos.example.com
+       Read at runtime by AppConfig.BuildDefaultServerUrl. Empty = blank form. -->
+  <PropertyGroup>
+    <DefaultServerUrl Condition="'$(DefaultServerUrl)' == ''"></DefaultServerUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="DefaultServerUrl" Value="$(DefaultServerUrl)" />
+    <EmbeddedResource Include="Resources\offline.html" LogicalName="offline.html" />
+    <EmbeddedResource Include="Resources\logo.png" LogicalName="logo.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2957.106" />

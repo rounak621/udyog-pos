@@ -2,8 +2,9 @@
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap rescap">
+  IgnorableNamespaces="uap uap5 rescap">
 
   <!--
     Package identity is a TEMPLATE. build-windows-msix.ps1 replaces the
@@ -53,6 +54,13 @@
         </uap:DefaultTile>
         <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#1A1A1A" />
       </uap:VisualElements>
+      <Extensions>
+        <!-- "Start UDYOG POS when I sign in to Windows": off until the user
+             ticks it in the settings form (Launcher/AutoStart.cs, same TaskId). -->
+        <uap5:Extension Category="windows.startupTask" Executable="UDYOGPOS.exe" EntryPoint="Windows.FullTrustApplication">
+          <uap5:StartupTask TaskId="UDYOGPOSStartup" Enabled="false" DisplayName="UDYOG POS" />
+        </uap5:Extension>
+      </Extensions>
     </Application>
   </Applications>
 

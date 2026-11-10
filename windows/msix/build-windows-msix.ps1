@@ -26,6 +26,10 @@
 .PARAMETER Version
   Package and app version, Major.Minor.Build.Revision.
 
+.PARAMETER DefaultServerUrl
+  Optional https origin that pre-fills the first-run server form
+  (MSBuild property DefaultServerUrl). Empty = blank form.
+
 .PARAMETER SelfSignedTest
   Signs with a throwaway self-signed cert under
   $env:LOCALAPPDATA\UDYOGPOS\dev-cert and trusts it for the current user.
@@ -53,6 +57,8 @@ param(
     [ValidatePattern('^\d+\.\d+\.\d+\.\d+$')]
     [string]$Version = '0.1.0.0',
 
+    [string]$DefaultServerUrl = '',
+
     [switch]$SelfSignedTest,
 
     [switch]$InstallLocally
@@ -79,7 +85,9 @@ foreach ($tool in 'dotnet', 'makeappx') {
 
 # --- 1. Publish the WinForms shell ------------------------------------------
 Remove-Item -Recurse -Force $publishDir, $stageDir, $msixOut -ErrorAction SilentlyContinue
-& dotnet publish $launcherProj -c $Configuration -r "win-$Platform" -o $publishDir "-p:Version=$Version"
+$publishArgs = @($launcherProj, '-c', $Configuration, '-r', "win-$Platform", '-o', $publishDir, "-p:Version=$Version")
+if ($DefaultServerUrl) { $publishArgs += "-p:DefaultServerUrl=$DefaultServerUrl" }
+& dotnet publish @publishArgs
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE" }
 
 $exePath = Join-Path $publishDir 'UDYOGPOS.exe'
