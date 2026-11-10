@@ -6,6 +6,7 @@ import { io } from "socket.io-client";
 import { REALTIME_EVENTS, realtimeInvalidations } from "@/lib/realtime-keys";
 import { setRealtimeState } from "@/lib/realtime-status";
 import { resolveWsUrl } from "@/lib/ws-url";
+import { autoPrintKitchenTicket } from "@/lib/kitchen-auto-print";
 
 // One socket connection per mounted consumer, joined to the branch's room
 // server-side (see backend RealtimeGateway). Invalidates the relevant
@@ -38,6 +39,12 @@ export function useRealtime(branchId: string | null) {
     };
     socket.on("disconnect", down);
     socket.on("connect_error", down);
+
+    // Desktop app only: new kitchen tickets go to this PC's kitchen printer
+    // when "Auto-print kitchen tickets" is on (lib/kitchen-auto-print.ts).
+    socket.on("kot.created", (payload: unknown) => {
+      void autoPrintKitchenTicket(branchId, payload);
+    });
 
     for (const event of REALTIME_EVENTS) {
       socket.on(event, () => {

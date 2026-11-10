@@ -39,7 +39,7 @@ import {
   type CheckoutResult,
   type CreatedOrder,
 } from "@/hooks/use-orders";
-import { usePrintKot, usePrintOrderUsb, type PrintJobResult } from "@/hooks/use-print";
+import { DesktopPrintError, usePrintKot, usePrintOrderUsb, type PrintJobResult } from "@/hooks/use-print";
 import { useSettings } from "@/hooks/use-settings";
 import { api, ApiError } from "@/lib/api";
 import { discountSummary, parseMoney, planPayment } from "@/lib/bill";
@@ -124,6 +124,10 @@ export function CheckoutPanel({
     r.unsupportedChars?.length
       ? toast.warning(`Sent, but ${r.unsupportedChars.join(" ")} cannot be printed by this printer's code page. Use browser print for the full text.`)
       : toast.success("Sent to the thermal printer");
+  // Desktop app: this PC's printer failed or is not set up. One message, and
+  // the browser print dialog as an explicit choice (never printed twice).
+  const offerBrowserPrint = (err: DesktopPrintError, print: () => void) =>
+    toast.info(err.message, { action: { label: "Print in browser", onClick: print } });
   // First print sends only tickets not yet printed. If they already went out
   // (e.g. a double tap or retry) the server refuses to print a duplicate and we
   // offer an explicit, REPRINT-stamped copy instead.
@@ -136,6 +140,10 @@ export function CheckoutPanel({
           if (reprint) toast.success("Reprint sent — marked REPRINT on paper");
         },
         onError: (err) => {
+          if (err instanceof DesktopPrintError) {
+            offerBrowserPrint(err, () => branchId && openKotPrint(order.id, branchId));
+            return;
+          }
           if (err instanceof ApiError && err.code === "ALREADY_PRINTED") {
             toast.info("The kitchen ticket was already printed", {
               action: { label: "Print a REPRINT", onClick: () => printKotNow(true) },
@@ -323,7 +331,9 @@ export function CheckoutPanel({
       {
         onSuccess: onPrinted,
         onError: (err) =>
-          toast.error(err instanceof ApiError ? err.message : "Could not print to the thermal printer"),
+          err instanceof DesktopPrintError
+            ? offerBrowserPrint(err, printBill)
+            : toast.error(err instanceof ApiError ? err.message : "Could not print to the thermal printer"),
       },
     );
 
@@ -365,7 +375,9 @@ export function CheckoutPanel({
               printUsb.mutate({ orderId: completed.id, drawer: completed.payments?.some((p) => p.method === "CASH") }, {
                 onSuccess: onPrinted,
                 onError: (err) =>
-                  toast.error(err instanceof ApiError ? err.message : "Could not print to the thermal printer"),
+                  err instanceof DesktopPrintError
+                    ? offerBrowserPrint(err, () => branchId && openReceiptPrint(completed.id, branchId))
+                    : toast.error(err instanceof ApiError ? err.message : "Could not print to the thermal printer"),
               })
             }
           >

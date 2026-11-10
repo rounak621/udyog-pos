@@ -22,6 +22,8 @@ export function useCurrentUser() {
           daysLeft: number | null;
         } | null;
         billingEnabled?: boolean;
+        /** Server prints over USB/9100 itself (ALLOW_SERVER_PRINT); otherwise the desktop app does. */
+        serverPrintEnabled?: boolean;
       }>("/auth/me"),
     retry: false,
   });

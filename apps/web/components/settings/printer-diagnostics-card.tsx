@@ -6,6 +6,7 @@ import { StatusNote, useNoteToast } from "@/components/ui/status-note";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrentUser } from "@/hooks/use-auth";
 import { useBranch } from "@/hooks/use-branch";
 import { useOpenCashDrawer, usePrintTestSlip, usePrinterDiagnostics } from "@/hooks/use-print";
 import { useSettings, useUpdateBranchSettings } from "@/hooks/use-settings";
@@ -15,7 +16,12 @@ import { ApiError } from "@/lib/api";
 
 export function PrinterDiagnosticsCard() {
   const { branchId } = useBranch();
-  const { data, isLoading, isFetching, refetch } = usePrinterDiagnostics(branchId);
+  const { data: me } = useCurrentUser();
+  // Cloud default: the server cannot reach this restaurant's printers, so
+  // its USB/network fields, diagnostics and test buttons are hidden; paper
+  // width and character set stay (the desktop app prints bytes built with them).
+  const serverPrint = me?.serverPrintEnabled === true;
+  const { data, isLoading, isFetching, refetch } = usePrinterDiagnostics(branchId, serverPrint);
   const { data: settings } = useSettings(branchId);
   const updateBranch = useUpdateBranchSettings(branchId);
   const testPrint = usePrintTestSlip(branchId);
@@ -37,19 +43,27 @@ export function PrinterDiagnosticsCard() {
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-sm font-semibold text-foreground">Thermal printer (receipts &amp; kitchen tickets)</h2>
-          <p className="text-sm text-muted-foreground">
-            Native ESC/POS printing, independent of the browser print dialog. The printer must be reachable
-            from the machine running UDYOG POS: USB on a Linux host, or a network printer on port 9100.
-          </p>
+          {serverPrint ? (
+            <p className="text-sm text-muted-foreground">
+              Native ESC/POS printing, independent of the browser print dialog. The printer must be reachable
+              from the machine running UDYOG POS: USB on a Linux host, or a network printer on port 9100.
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Printers are set up in the UDYOG POS Windows app (Ctrl+Shift+P).
+            </p>
+          )}
         </div>
-        <Button variant="ghost" size="icon" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={isFetching ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
-        </Button>
+        {serverPrint && (
+          <Button variant="ghost" size="icon" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className={isFetching ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+          </Button>
+        )}
       </div>
 
       <StatusNote note={note} onClear={clearNote} />
 
-      {isLoading || !data ? (
+      {!serverPrint ? null : isLoading || !data ? (
         <Skeleton className="h-16 rounded-lg" />
       ) : (
         <div className="flex flex-col gap-2">
@@ -88,6 +102,8 @@ export function PrinterDiagnosticsCard() {
 
       {branch && (
         <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
+          {serverPrint && (
+          <>
           <div className="flex flex-col gap-1.5">
             <Label>Connection</Label>
             <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Printer connection">
@@ -160,6 +176,8 @@ export function PrinterDiagnosticsCard() {
               Save address
             </Button>
           )}
+          </>
+          )}
           <div className="flex flex-col gap-1.5">
             <Label>Paper width</Label>
             <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Paper width">
@@ -225,6 +243,7 @@ export function PrinterDiagnosticsCard() {
         </div>
       )}
 
+      {serverPrint && (
       <div>
         <Button
           variant="outline"
@@ -275,6 +294,7 @@ export function PrinterDiagnosticsCard() {
           payments open it automatically.
         </p>
       </div>
+      )}
     </Card>
   );
 }
