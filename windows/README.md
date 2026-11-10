@@ -24,3 +24,14 @@ First run asks for the server address: HTTPS only (http only for localhost/127.0
 10. Disconnect the network and reload: the "Cannot reach UDYOG POS" page shows; Retry and the 10-second auto-retry reload the app once the network is back.
 11. A link to another site (e.g. the "Source code" link) opens in the default browser; the app stays on the POS.
 12. User agent ends with `UDYOGPOS-Shell/<version>`: see it in the server or reverse-proxy access log, or in a Debug build via F12 DevTools → `navigator.userAgent`. The settings form footer shows the same version.
+
+## Printer test checklist (real Windows PC + printers)
+1. Install the USB receipt printer's Windows driver; in the app press Ctrl+Shift+P, Receipt = Windows printer → that printer, Test print: slip prints.
+2. Kitchen = Network printer, its LAN IP, port 9100, Test print: slip prints on the kitchen printer.
+3. POS → pay a bill in cash → "Thermal receipt": receipt prints and the cash drawer opens; a card payment does not open it.
+4. POS → "KOT (thermal)": the kitchen ticket prints on the LAN printer.
+5. Set Receipt to "Not set", print a receipt: one message appears with "Print in browser", which opens the Windows Print dialog. Nothing prints twice.
+6. Tick "Auto-print kitchen tickets on this PC", send an order to the kitchen from another device: the ticket prints once; reload the app or unplug the network for a minute: it does not print again.
+7. Put a station id in the station box: only that station's tickets auto-print.
+8. Set MIN_SHELL_VERSION on the server above the installed app version: the "Please update the UDYOG POS app" banner appears; in a normal browser it never does.
+9. Server without ALLOW_SERVER_PRINT: Settings shows "Printers are set up in the UDYOG POS Windows app (Ctrl+Shift+P)" and no USB/network fields.

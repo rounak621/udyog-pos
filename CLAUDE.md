@@ -77,3 +77,13 @@ UDYOG POS = restaurant POS, white-labelled from an AGPL-3.0 open-source repo, ow
 - GST invoices: UDYOG/<FY>/<6 digits>, per Indian FY (Asia/Kolkata), issued in the webhook transaction from the charged amount; snapshot JSON. Missing COMPANY_* / SUBSCRIPTION_SAC / GST_RATE_PERCENT = no invoice ("Invoice pending").
 - Env: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET, GRACE_DAYS (3), COMPANY_NAME, COMPANY_GSTIN, COMPANY_ADDRESS, SUBSCRIPTION_SAC, GST_RATE_PERCENT.
 - Known gaps: no plan change/upgrade flow; trial has no limits; SAC and GST rate need a CA check before launch; refunds not handled; invoice is HTML only (print to PDF); no email verification at sign-up.
+
+## Desktop decisions
+- Printers belong to the PC, not the branch: the Windows app stores them in %LOCALAPPDATA%\UDYOGPOS\printers.json (roles RECEIPT and KITCHEN; Ctrl+Shift+P). Paper width, code page and columns stay branch settings (Branch.printerPaperWidthMm/printerCodepage/printerColumns).
+- The backend only builds ESC/POS bytes (GET orders/:id/print/escpos, orders/:id/kot/escpos, orders/print/drawer/escpos, orders/print/test/escpos); the shell prints them (winspool RAW or TCP 9100). The drawer pulse goes through printRaw to RECEIPT.
+- Server-side printing (USB/9100 from the server, KDS print/reprint) is OFF unless ALLOW_SERVER_PRINT=true; otherwise those routes answer 409 SERVER_PRINT_DISABLED. /auth/me returns serverPrintEnabled.
+- Bridge trust (windows/msix/Launcher/NativeBridge.cs): only messages whose Source is the configured server origin, only on WebViews the shell created; max 1 MB; no file or process access; the web can read the printer config but never change it. BridgeVersion = 1.
+- HTML window.print() is always the fallback: on a bridge error the web offers "Print in browser" once, never prints twice. Outside the Windows app the web behaves as before.
+- Kitchen auto-print uses the existing kot.created event (payload now also has orderId), de-duplicated per window (memory + sessionStorage udyogpos_autoprinted_kots).
+- MIN_SHELL_VERSION (optional): GET /system/shell-check reads the UDYOGPOS-Shell/<version> user-agent token; older apps see a non-blocking update banner.
+- Known gaps: no serial/Bluetooth printers, no label printers, no per-station printer routing beyond the station filter, C# is not unit-tested (compiled only by the manual windows-msix workflow), Store identity and code signing pending.

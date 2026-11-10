@@ -60,6 +60,9 @@ services:
       COMPANY_ADDRESS: "${COMPANY_ADDRESS:-}"
       SUBSCRIPTION_SAC: "${SUBSCRIPTION_SAC:-}"
       GST_RATE_PERCENT: "${GST_RATE_PERCENT:-}"
+      # Printing (see .env.example): server-side USB/9100 printing off unless "true"; oldest supported Windows app.
+      ALLOW_SERVER_PRINT: "${ALLOW_SERVER_PRINT:-}"
+      MIN_SHELL_VERSION: "${MIN_SHELL_VERSION:-}"
       # In-app updates (Settings > Updates): the backend asks the `updater`
       # container below to pull the latest published images. Unset these two
       # and the Update button simply says this install can't update itself.
