@@ -69,7 +69,7 @@ describe('isPlatformAdmin cannot be mass-assigned', () => {
       subscription: { findFirst: jest.fn().mockResolvedValue(null) },
       user: { findFirst: jest.fn().mockResolvedValue(null), create },
     };
-    await new UsersService(prisma as never, audit).create('r1', 'u1', {
+    await new UsersService(prisma as never, audit, { revokeAllForUser: jest.fn() } as never).create('r1', 'u1', {
       ...dto,
       isPlatformAdmin: true,
     } as never);
@@ -143,7 +143,7 @@ describe('staff email', () => {
       user: { findFirst, create: jest.fn() },
     };
     await expect(
-      new UsersService(prisma as never, audit).create('r1', 'u1', {
+      new UsersService(prisma as never, audit, { revokeAllForUser: jest.fn() } as never).create('r1', 'u1', {
         name: 'Eve',
         email: 'taken@example.com',
         password: 'longpassword',

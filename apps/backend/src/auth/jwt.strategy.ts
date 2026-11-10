@@ -9,9 +9,12 @@ import {
   RESTAURANT_ACCESS_SELECT,
   assertRestaurantAllowed,
 } from '../common/restaurant-access';
+import { assertAppSessionActive } from './app-sessions.service';
 
 interface JwtPayload {
   sub: string;
+  /** App sessions only (AppSession id); web cookie tokens have none. */
+  sid?: string;
 }
 
 const cookieExtractor = (req: {
@@ -55,6 +58,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Session no longer valid');
     }
+    // App tokens: the session must still be live (logout, logout-all,
+    // password change and deactivation revoke it before the token expires).
+    if (payload.sid) {
+      await assertAppSessionActive(this.prisma, payload.sid, payload.sub);
+    }
     // Hosted mode: a suspended or expired restaurant is locked on every
     // request (403 + code). Platform admins always get through; billing
     // routes (@AllowWhenExpired) stay open for an expired trial/subscription.
@@ -71,6 +79,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       roleName: user.role.name,
       permissions: user.role.permissions.map((rp) => rp.permission.key),
       isPlatformAdmin: user.isPlatformAdmin,
+      ...(payload.sid ? { sessionId: payload.sid } : {}),
     };
   }
 }

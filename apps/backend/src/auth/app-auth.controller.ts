@@ -1,10 +1,22 @@
-import { Body, Controller, Get, Post, Query, UsePipes } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  UseGuards,
+  UsePipes,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import {
   appLoginSchema,
   appPinLoginSchema,
+  appRefreshSchema,
   type AppLoginDto,
+  type AppRefreshDto,
+  type AppSessionInfo,
   type AppPinLoginDto,
   type AppTokenResponse,
   type PinStaffMember,
@@ -12,6 +24,7 @@ import {
 } from '@nodedr-restaurant/types';
 import { Auth } from '../common/decorators/auth.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { BranchAccessService } from '../common/services/branch-access.service';
 import { LoginThrottle } from '../common/throttle/login-throttle';
@@ -59,6 +72,44 @@ export class AppAuthController {
     const dto = body as AppPinLoginDto;
     const user = await this.authService.verifyPinLogin(dto);
     return this.appSessions.create(user, dto.deviceName);
+  }
+
+  /**
+   * New access token + rotated refresh token. Presenting an already used
+   * refresh token revokes the whole session (see AppSessionsService).
+   * Per IP: 20/min.
+   */
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @Post('refresh')
+  @UsePipes(new ZodValidationPipe(appRefreshSchema))
+  refresh(@Body() body: unknown): Promise<AppTokenResponse> {
+    return this.appSessions.refresh((body as AppRefreshDto).refreshToken);
+  }
+
+  /** Ends this app session (the one the Bearer access token belongs to). */
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@CurrentUser() user: SessionUser) {
+    if (!user.sessionId) {
+      throw new BadRequestException('Not an app session');
+    }
+    await this.appSessions.revoke(user.sessionId, user.id);
+    return { ok: true };
+  }
+
+  /** Ends every app session of the signed-in user (web cookie unaffected). */
+  @UseGuards(JwtAuthGuard)
+  @Post('logout-all')
+  async logoutAll(@CurrentUser() user: SessionUser) {
+    const revoked = await this.appSessions.revokeAllForUser(user.id);
+    return { ok: true, revoked };
+  }
+
+  /** The caller's active app sessions (device, last used). */
+  @UseGuards(JwtAuthGuard)
+  @Get('sessions')
+  sessions(@CurrentUser() user: SessionUser): Promise<AppSessionInfo[]> {
+    return this.appSessions.list(user.id, user.sessionId);
   }
 
   /**

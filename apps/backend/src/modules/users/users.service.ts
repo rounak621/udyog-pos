@@ -8,6 +8,7 @@ import type { CreateStaffDto, UpdateStaffDto } from '@nodedr-restaurant/types';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { AuditService } from '../../audit/audit.service';
+import { AppSessionsService } from '../../auth/app-sessions.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { assertWithinPlanLimit } from '../../common/plan-limits';
 
@@ -28,6 +29,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly appSessions: AppSessionsService,
   ) {}
 
   list(restaurantId: string) {
@@ -150,6 +152,12 @@ export class UsersService {
       },
       select: SELECT,
     });
+
+    // A new password or a disabled account ends every app sign-in of this
+    // user at once (their access tokens are rejected from the next request).
+    if (passwordHash || dto.isActive === false) {
+      await this.appSessions.revokeAllForUser(id);
+    }
 
     // Never log `dto.password`/`passwordHash` — only the fields it's safe
     // for an owner reviewing history to see. `passwordChanged` is a boolean
