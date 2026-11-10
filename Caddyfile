@@ -1,0 +1,41 @@
+# UDYOG POS reverse proxy (used by docker-compose.prod.yml).
+# One domain: /api/* and /socket.io/* go to the backend, everything else to
+# the web app. Caddy gets and renews the HTTPS certificate automatically.
+# DOMAIN comes from .env.production (e.g. app.example.com, DNS A record
+# pointing at this server).
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Access log to stdout (read with `docker compose logs caddy`).
+	log {
+		output stdout
+		format json
+	}
+
+	# Uploads are limited to 5 MB by the backend; 25 MB leaves room for
+	# bulk imports and larger JSON payloads without allowing huge bodies.
+	request_body {
+		max_size 25MB
+	}
+
+	# Set only when the app has not already set them (the backend's helmet
+	# sets HSTS and X-Frame-Options SAMEORIGIN on API responses). No CSP and
+	# no X-Frame-Options here, so nothing conflicts with the app.
+	header {
+		?Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		?X-Content-Type-Options "nosniff"
+		?Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# API and realtime (Socket.IO long-polling and WebSocket upgrades).
+	@backend path /api/* /socket.io/*
+	handle @backend {
+		reverse_proxy backend:4000
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

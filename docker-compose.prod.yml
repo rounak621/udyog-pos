@@ -1,0 +1,120 @@
+# UDYOG POS - production / staging runtime (one server, many restaurants).
+# Separate from docker-compose.yml (local development). No `build:` here:
+# images are built by GitHub Actions and pulled from GHCR by tag.
+#
+# Run on the server through scripts/deploy.sh (it sets TAG and uses
+# --env-file .env.production). Only Caddy publishes ports (80/443); backend,
+# web and the optional local Postgres stay on the internal network.
+#
+# Database: point DATABASE_URL at a managed Postgres, or start the bundled
+# one with the `localdb` profile (COMPOSE_PROFILES=localdb in .env.production).
+
+name: udyog-pos
+
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env.production}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - web
+    networks:
+      - internal
+
+  backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/rounak621/udyog-pos-backend}:${TAG:?set TAG (scripts/deploy.sh does)}
+    restart: unless-stopped
+    # Every runtime setting comes from the server's .env.production
+    # (template: .env.production.example). Never commit real values.
+    # ENV_FILE only for config checks (e.g. ENV_FILE=.env.production.example).
+    env_file:
+      - ${ENV_FILE:-.env.production}
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      UPLOADS_DIR: /data/uploads
+      JWT_SECRET_STATE_FILE: /data/state/jwt-secret
+      # Never enabled in production (webhooks to private/plain-http targets).
+      WEBHOOKS_ALLOW_PRIVATE: ""
+      WEBHOOKS_ALLOW_INSECURE: ""
+    volumes:
+      - app_data:/data
+    expose:
+      - "4000"
+    # The image runs `prisma migrate deploy` before starting the API
+    # (apps/backend/Dockerfile CMD), so the health check only passes once
+    # migrations are applied.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000/api/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 90s
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+    networks:
+      - internal
+
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/rounak621/udyog-pos-web}:${TAG:?set TAG (scripts/deploy.sh does)}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # Next standalone binds to $HOSTNAME; Docker sets it to the container
+      # id, so bind to all interfaces explicitly.
+      HOSTNAME: 0.0.0.0
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/login >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    depends_on:
+      - backend
+    networks:
+      - internal
+
+  postgres:
+    profiles: ["localdb"]
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-udyog}
+      # Required with the localdb profile (the image refuses an empty password).
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB: ${POSTGRES_DB:-udyog}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-udyog} -d ${POSTGRES_DB:-udyog}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+networks:
+  internal: {}
+
+volumes:
+  app_data:
+  pg_data:
+  caddy_data:
+  caddy_config:

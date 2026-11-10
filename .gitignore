@@ -8,6 +8,9 @@ build/
 .env.local
 .env.*.local
 !.env.example
+# Server-only production settings (template: .env.production.example).
+.env.production
+.deploy/
 data/
 *.log
 .DS_Store
