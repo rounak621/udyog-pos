@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
-  <assemblyIdentity version="1.0.0.0" name="OrderRestro.Launcher" type="win32"/>
+  <assemblyIdentity version="1.0.0.0" name="UDYOGPOS.Shell" type="win32"/>
 
   <!--
     requestedExecutionLevel MUST stay "asInvoker" — this is the entire point

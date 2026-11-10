@@ -6,21 +6,22 @@
   IgnorableNamespaces="uap rescap">
 
   <!--
-    Package identity. Name/Publisher come from Partner Center's "View
-    product identity" page for this app (Store ID 9NVPNLWW2FZ4, PFN
-    NODEDRINFOTECHLIMITED.NodedrOrderRestro_wsh4jzg5a6682) — Publisher MUST
-    exactly match the CN issued there, or Store validation and any
-    Add-AppxPackage install reject the package.
+    Package identity is a TEMPLATE. build-windows-msix.ps1 replaces the
+    __TOKENS__ below from its -IdentityName / -Publisher /
+    -PublisherDisplayName / -Version parameters (defaults are a fake DEV
+    identity). For a real release the owner supplies either the Partner
+    Center "Product identity" values or the Subject of their own
+    code-signing certificate; see windows/README.md.
   -->
   <Identity
-    Name="NODEDRINFOTECHLIMITED.NodedrOrderRestro"
-    Publisher="CN=11C721FC-E399-4888-B532-7BFCD5C491B3"
-    Version="1.0.4.0"
+    Name="__IDENTITY_NAME__"
+    Publisher="__PUBLISHER__"
+    Version="__VERSION__"
     ProcessorArchitecture="x64" />
 
   <Properties>
-    <DisplayName>Nodedr OrderRestro</DisplayName>
-    <PublisherDisplayName>NODEDR INFOTECH LIMITED</PublisherDisplayName>
+    <DisplayName>UDYOG POS</DisplayName>
+    <PublisherDisplayName>__PUBLISHER_DISPLAY_NAME__</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -37,11 +38,11 @@
   </Dependencies>
 
   <Applications>
-    <Application Id="OrderRestro" Executable="OrderRestro.exe" EntryPoint="Windows.FullTrustApplication">
+    <Application Id="UDYOGPOS" Executable="UDYOGPOS.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="Nodedr OrderRestro"
-        Description="Offline-first restaurant POS, tables, kitchen display, and menu management."
-        BackgroundColor="transparent"
+        DisplayName="UDYOG POS"
+        Description="Restaurant billing and ordering."
+        BackgroundColor="#1A1A1A"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square310x310Logo="Assets\Square310x310Logo.png">
@@ -50,7 +51,7 @@
             <uap:ShowOn Tile="wide310x150Logo" />
           </uap:ShowNameOnTiles>
         </uap:DefaultTile>
-        <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#0F0F11" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#1A1A1A" />
       </uap:VisualElements>
     </Application>
   </Applications>
@@ -58,8 +59,7 @@
   <!--
     Capabilities: deliberately minimal, per hardening brief sections 2/17/26.
 
-    - internetClient: outbound HTTP(S) to the restaurant's LAN/local
-      OrderRestro server. This is the ONLY capability the app needs.
+    - internetClient: outbound HTTPS to the UDYOG POS cloud server. This is the ONLY capability the app needs.
     - runFullTrust: required for any Win32/.NET desktop app packaged as
       MSIX (this is what "EntryPoint=Windows.FullTrustApplication" above
       declares) — this is NOT the same thing as elevation/admin rights.

@@ -1,11 +1,11 @@
 using System.Net.Http;
 using System.Text.Json;
 
-namespace OrderRestro.Launcher;
+namespace UdyogPos.Shell;
 
 /// <summary>
-/// Per-user configuration: which LAN/local OrderRestro server this client
-/// points at. Stored under %LOCALAPPDATA%\OrderRestro, NOT inside the MSIX
+/// Per-user configuration: which UDYOG POS server this client points at.
+/// Stored under %LOCALAPPDATA%\UDYOGPOS, NOT inside the MSIX
 /// install directory (which is read-only after install and not guaranteed
 /// writable/stable across updates — see hardening brief section 19).
 /// </summary>
@@ -13,22 +13,10 @@ internal sealed class AppConfig
 {
     public string? ServerUrl { get; set; }
 
-    // "embedded" (this PC runs the server, ServerUrl is always
-    // localhost:1995 and never user-editable) or null/anything else
-    // (thin-client mode — unchanged from before this feature, prompts for
-    // a remote address via ServerSettingsForm). Set once at first run via
-    // FirstRunChoiceForm.
-    public string? Mode { get; set; }
-
-    public bool IsEmbedded => Mode == "embedded";
-
-    // internal, not private: MainForm's "Remove All Local Data & Uninstall"
-    // action deletes this whole tree as the single root of everything this
-    // app ever writes (config, WebView2 profile, logs, and ServerPaths.
-    // DataDir underneath it) — see that method's own comment for why MSIX
-    // needs this at all (no uninstall-hook mechanism to do it automatically).
+    // internal, not private: MainForm's "Remove All Local Data" action
+    // deletes this whole tree (config, WebView2 profile, logs).
     internal static string ConfigDir =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OrderRestro");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "UDYOGPOS");
 
     public static string ConfigPath => Path.Combine(ConfigDir, "config.json");
 
@@ -64,8 +52,7 @@ internal sealed class AppConfig
 
     /// <summary>
     /// Only accepts http/https URLs pointing at a host — this app is a thin
-    /// client for a restaurant's own OrderRestro server (LAN IP, hostname,
-    /// or a Tailscale/VPN address), never a place for arbitrary local file
+    /// client for the UDYOG POS server, never a place for arbitrary local file
     /// or other-scheme URLs to end up wired into WebView2 navigation.
     /// </summary>
     public static bool IsValidServerUrl(string value, out Uri? uri)
@@ -138,7 +125,7 @@ internal sealed class AppConfig
             using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(6) };
             using var response = await client.GetAsync($"{serverUrl}/api/health", ct);
             if (response.IsSuccessStatusCode) return (true, "Connected.");
-            return (false, $"Reached that address, but it didn't respond like an OrderRestro server (HTTP {(int)response.StatusCode}).");
+            return (false, $"Reached that address, but it didn't respond like a UDYOG POS server (HTTP {(int)response.StatusCode}).");
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {

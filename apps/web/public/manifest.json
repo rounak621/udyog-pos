@@ -1,7 +1,7 @@
 {
   "name": "UDYOG POS",
   "short_name": "UDYOG POS",
-  "description": "Offline-first restaurant management system — POS, tables, kitchen display, menu, inventory.",
+  "description": "Restaurant billing and ordering.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -1,52 +1,41 @@
 #Requires -Version 7.0
 <#
 .SYNOPSIS
-  Builds, packages, and (optionally) locally installs the OrderRestro
-  Windows MSIX client. Windows-only — requires the .NET 8 SDK plus the
-  Windows 10/11 SDK (for makeappx.exe/signtool.exe, normally on PATH from a
-  "Developer PowerShell for VS" prompt, or installable standalone). Not
-  runnable on Linux/macOS; the reference build/validation run for this
-  script is the GitHub Actions `windows-msix.yml` workflow (windows-latest
-  runner), not this repo's own Linux dev environment.
+  Builds and packages the UDYOG POS Windows MSIX client. Windows-only:
+  needs the .NET 8 SDK and the Windows 10/11 SDK (makeappx.exe, signtool.exe).
+  The reference build is the manual GitHub Actions workflow windows-msix.yml.
 
 .DESCRIPTION
-  Uses the classic, widely-documented "Desktop Bridge" packaging flow for a
-  plain WinForms app rather than MSBuild's single-project-MSIX tooling:
-    1. `dotnet publish` the WinForms launcher (self-contained win-x64
-       folder publish — not single-file, see Launcher.csproj for why).
-    2. Stage the published output + Assets/ + AppxManifest.xml into one
-       folder (the exact shape Windows expects inside an .msix).
-    3. `makeappx pack` that folder into OrderRestro.msix.
-    4. Optionally sign it with a throwaway self-signed test cert
-       (-SelfSignedTest) and/or install it locally (-InstallLocally) for a
-       real install/launch round-trip.
+    1. `dotnet publish` the WinForms shell (self-contained win-x64 folder).
+    2. Stage the output + Assets/ + AppxManifest.xml (identity tokens filled
+       in from the parameters below).
+    3. `makeappx pack` into out/UDYOGPOS.msix.
+    4. Optionally sign with a throwaway self-signed TEST cert and install it.
 
-.PARAMETER Configuration
-  Release (default) or Debug.
+.PARAMETER IdentityName
+  MSIX Identity/@Name. Default is a fake DEV value. For a Store release use
+  the Partner Center "Package/Identity/Name".
+
+.PARAMETER Publisher
+  MSIX Identity/@Publisher. Must equal the signing certificate Subject (or
+  the Partner Center "Package/Identity/Publisher"). Default is a fake DEV value.
+
+.PARAMETER PublisherDisplayName
+  Shown by Windows as the publisher. Default is a fake DEV value.
+
+.PARAMETER Version
+  Package and app version, Major.Minor.Build.Revision.
 
 .PARAMETER SelfSignedTest
-  Generates (or reuses) a throwaway self-signed code-signing certificate
-  under $env:LOCALAPPDATA\OrderRestro\dev-cert, signs the package with it,
-  and trusts it into CurrentUser\TrustedPeople so `Add-AppxPackage`
-  succeeds locally. FOR LOCAL/CI TEST INSTALLS ONLY — never use this cert
-  for a real Store or sideload distribution; Partner Center issues the
-  real signing identity at submission time (see windows/msix/README.md).
+  Signs with a throwaway self-signed cert under
+  $env:LOCALAPPDATA\UDYOGPOS\dev-cert and trusts it for the current user.
+  LOCAL/CI TEST INSTALLS ONLY.
 
 .PARAMETER InstallLocally
-  After a successful -SelfSignedTest build, runs Add-AppxPackage to
-  actually install the package on the current machine (used by CI to get a
-  real install/launch PASS signal, not just "it compiled").
-
-.PARAMETER IncludeEmbeddedServer
-  Also runs stage-server-assets.ps1 (pnpm install/build, portable Node.js,
-  portable Postgres) and folds its output into the package under
-  Launcher\server\ — needed for the "this PC is the server too" mode (see
-  ServerSupervisor.cs). Off by default: it's slow (full pnpm install +
-  ~80MB of downloads) and the plain thin-client build doesn't need it.
+  After -SelfSignedTest, installs the package with Add-AppxPackage.
 
 .EXAMPLE
   ./build-windows-msix.ps1 -SelfSignedTest -InstallLocally
-  ./build-windows-msix.ps1 -SelfSignedTest -InstallLocally -IncludeEmbeddedServer
 #>
 param(
     [ValidateSet('Release', 'Debug')]
@@ -55,11 +44,18 @@ param(
     [ValidateSet('x64')]
     [string]$Platform = 'x64',
 
+    [string]$IdentityName = 'UDYOG.POS.Dev',
+
+    [string]$Publisher = 'CN=UDYOG Dev',
+
+    [string]$PublisherDisplayName = 'UDYOG Dev (not for release)',
+
+    [ValidatePattern('^\d+\.\d+\.\d+\.\d+$')]
+    [string]$Version = '0.1.0.0',
+
     [switch]$SelfSignedTest,
 
-    [switch]$InstallLocally,
-
-    [switch]$IncludeEmbeddedServer
+    [switch]$InstallLocally
 )
 
 $ErrorActionPreference = 'Stop'
@@ -69,46 +65,46 @@ $manifestSrc = Join-Path $root 'AppxManifest.xml'
 $assetsSrc = Join-Path $root 'Assets'
 $publishDir = Join-Path $root 'out/publish'
 $stageDir = Join-Path $root 'out/stage'
-$msixOut = Join-Path $root 'out/OrderRestro.msix'
+$msixOut = Join-Path $root 'out/UDYOGPOS.msix'
 
-Write-Host "== OrderRestro Windows MSIX build ==" -ForegroundColor Cyan
-Write-Host "Configuration=$Configuration Platform=$Platform" -ForegroundColor Cyan
+Write-Host "== UDYOG POS Windows MSIX build ==" -ForegroundColor Cyan
+Write-Host "Configuration=$Configuration Platform=$Platform Version=$Version" -ForegroundColor Cyan
+Write-Host "Identity=$IdentityName Publisher=$Publisher" -ForegroundColor Cyan
 
 foreach ($tool in 'dotnet', 'makeappx') {
     if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
-        throw "$tool not found on PATH. Install the .NET 8 SDK and the Windows " +
-              "10/11 SDK (makeappx.exe ships with it — run from a 'Developer " +
-              "PowerShell for VS' prompt if it's not directly on PATH)."
+        throw "$tool not found on PATH. Install the .NET 8 SDK and the Windows 10/11 SDK."
     }
 }
 
-# --- 1. Publish the WinForms launcher --------------------------------------
+# --- 1. Publish the WinForms shell ------------------------------------------
 Remove-Item -Recurse -Force $publishDir, $stageDir, $msixOut -ErrorAction SilentlyContinue
-& dotnet publish $launcherProj -c $Configuration -r "win-$Platform" -o $publishDir
+& dotnet publish $launcherProj -c $Configuration -r "win-$Platform" -o $publishDir "-p:Version=$Version"
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE" }
 
-$exePath = Join-Path $publishDir 'OrderRestro.exe'
-if (-not (Test-Path $exePath)) { throw "Publish succeeded but OrderRestro.exe was not found at $exePath" }
+$exePath = Join-Path $publishDir 'UDYOGPOS.exe'
+if (-not (Test-Path $exePath)) { throw "Publish succeeded but UDYOGPOS.exe was not found at $exePath" }
 
 # --- 2. Stage the package layout --------------------------------------------
 New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
 Copy-Item -Path (Join-Path $publishDir '*') -Destination $stageDir -Recurse -Force
 Copy-Item -Path $assetsSrc -Destination (Join-Path $stageDir 'Assets') -Recurse -Force
-Copy-Item -Path $manifestSrc -Destination (Join-Path $stageDir 'AppxManifest.xml') -Force
 
-# Never ship .pdb debug symbols inside the MSIX package (validate-msix.ps1
-# fails the build if any slip through here).
+# Fill the identity tokens. XML-escape the values (a Publisher CN may hold
+# characters such as '&' or quotes).
+$esc = { param($v) [System.Security.SecurityElement]::Escape($v) }
+$manifestText = Get-Content $manifestSrc -Raw
+$manifestText = $manifestText.
+    Replace('__IDENTITY_NAME__', (& $esc $IdentityName)).
+    Replace('__PUBLISHER_DISPLAY_NAME__', (& $esc $PublisherDisplayName)).
+    Replace('__PUBLISHER__', (& $esc $Publisher)).
+    Replace('__VERSION__', $Version)
+if ($manifestText -match '__[A-Z_]+__"|>__[A-Z_]+__<') { throw "AppxManifest.xml still has an unreplaced __TOKEN__" }
+$stagedManifest = Join-Path $stageDir 'AppxManifest.xml'
+Set-Content -Path $stagedManifest -Value $manifestText -Encoding utf8NoBOM
+
+# Never ship .pdb debug symbols inside the package.
 Get-ChildItem -Path $stageDir -Filter '*.pdb' -Recurse -File | Remove-Item -Force
-
-# --- 2.5. Optional: embedded server assets (Postgres + Node + backend + web) --
-if ($IncludeEmbeddedServer) {
-    Write-Host "== Staging embedded server assets (this is the slow step) ==" -ForegroundColor Cyan
-    # Any failure inside stage-server-assets.ps1 throws a terminating error
-    # (it also sets $ErrorActionPreference = 'Stop'), which propagates up
-    # and halts this script too — no separate exit-code check needed here.
-    $stageServerScript = Join-Path $root 'stage-server-assets.ps1'
-    & $stageServerScript -StageDir $stageDir
-}
 
 # --- 3. Pack ------------------------------------------------------------------
 New-Item -ItemType Directory -Force -Path (Split-Path $msixOut) | Out-Null
@@ -119,21 +115,16 @@ Write-Host "Built package: $msixOut" -ForegroundColor Green
 # --- 4. Optional: sign with a throwaway local test certificate -------------
 if ($SelfSignedTest) {
     if (-not (Get-Command signtool -ErrorAction SilentlyContinue)) {
-        throw "signtool not found on PATH — required for -SelfSignedTest. Install the Windows 10/11 SDK."
+        throw "signtool not found on PATH; install the Windows 10/11 SDK."
     }
-    $certDir = Join-Path $env:LOCALAPPDATA 'OrderRestro\dev-cert'
+    $certDir = Join-Path $env:LOCALAPPDATA 'UDYOGPOS\dev-cert'
     New-Item -ItemType Directory -Force -Path $certDir | Out-Null
-    $pfxPath = Join-Path $certDir 'orderrestro-dev.pfx'
-    $cerPath = Join-Path $certDir 'orderrestro-dev.cer'
+    $pfxPath = Join-Path $certDir 'udyogpos-dev.pfx'
+    $cerPath = Join-Path $certDir 'udyogpos-dev.cer'
+    $pfxPassword = 'udyogpos-dev'   # throwaway test cert only
 
-    # Windows requires the signing cert's Subject to exactly equal the
-    # packaged manifest's Identity/Publisher, or Add-AppxPackage rejects
-    # the install even for a self-signed test build — so read it from the
-    # manifest we're about to pack rather than hardcoding it here.
-    [xml]$manifestForSubject = Get-Content $manifestSrc
-    $subject = $manifestForSubject.Package.Identity.Publisher
-    if ([string]::IsNullOrWhiteSpace($subject)) { throw "AppxManifest.xml Identity/@Publisher is empty" }
-
+    # The signing cert Subject must equal Identity/@Publisher.
+    $subject = $Publisher
     $existing = Get-ChildItem Cert:\CurrentUser\My |
         Where-Object { $_.Subject -eq $subject -and $_.NotAfter -gt (Get-Date) } |
         Select-Object -First 1
@@ -144,55 +135,45 @@ if ($SelfSignedTest) {
             -Type Custom `
             -Subject $subject `
             -KeyUsage DigitalSignature `
-            -FriendlyName "OrderRestro dev-only test cert" `
+            -FriendlyName "UDYOG POS dev-only test cert" `
             -CertStoreLocation "Cert:\CurrentUser\My" `
             -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
-        $pwd = ConvertTo-SecureString -String "orderrestro-dev" -Force -AsPlainText
+        $pwd = ConvertTo-SecureString -String $pfxPassword -Force -AsPlainText
         Export-PfxCertificate -Cert $existing -FilePath $pfxPath -Password $pwd | Out-Null
         Export-Certificate -Cert $existing -FilePath $cerPath | Out-Null
-        # Trust it locally so Add-AppxPackage doesn't reject an untrusted
-        # signer — this is what makes it a TEST-ONLY cert; never do this on
-        # an end-user machine.
-        #
-        # This is a self-signed cert (its own root, not chained to a real
-        # CA), so CurrentUser\TrustedPeople alone is NOT enough — MSIX/AppX
-        # deployment validates the chain's root specifically, and rejects
-        # with HRESULT 0x800B0109 ("chain terminated in a root certificate
-        # which is not trusted") unless the cert is also trusted as a root.
+        # A self-signed cert is its own root: MSIX install needs it trusted
+        # as a root (LocalMachine\Root needs admin) and in TrustedPeople.
         Import-Certificate -FilePath $cerPath -CertStoreLocation Cert:\CurrentUser\TrustedPeople | Out-Null
         try {
             Import-Certificate -FilePath $cerPath -CertStoreLocation Cert:\LocalMachine\Root -ErrorAction Stop | Out-Null
         } catch {
-            Write-Host "WARNING: could not import test cert into LocalMachine\Root ($($_.Exception.Message)) — this store requires admin rights. Add-AppxPackage will likely fail with 0x800B0109 until this succeeds; re-run as Administrator." -ForegroundColor Yellow
+            Write-Host "WARNING: could not import test cert into LocalMachine\Root ($($_.Exception.Message)); run as Administrator or install will fail with 0x800B0109." -ForegroundColor Yellow
         }
     }
     elseif (-not (Test-Path $pfxPath)) {
-        throw "Found existing cert '$subject' in the store but no matching .pfx at $pfxPath — delete the cert from Cert:\CurrentUser\My and re-run to regenerate both together."
+        throw "Found cert '$subject' in the store but no .pfx at $pfxPath; delete the cert from Cert:\CurrentUser\My and re-run."
     }
 
-    $pwd = ConvertTo-SecureString -String "orderrestro-dev" -Force -AsPlainText
-    & signtool sign /fd SHA256 /a /f $pfxPath /p "orderrestro-dev" $msixOut
+    & signtool sign /fd SHA256 /a /f $pfxPath /p $pfxPassword $msixOut
     if ($LASTEXITCODE -ne 0) { throw "signtool sign failed with exit code $LASTEXITCODE" }
+    # Testers must trust this .cer before installing the test package.
+    if (Test-Path $cerPath) { Copy-Item $cerPath (Join-Path $root 'out/udyogpos-dev.cer') -Force }
     Write-Host "Signed with dev-only test certificate." -ForegroundColor Green
 }
 else {
-    Write-Host "Built UNSIGNED package (no -SelfSignedTest). Store submission " -ForegroundColor Yellow
-    Write-Host "signs automatically on upload; sideload installs need a signed" -ForegroundColor Yellow
-    Write-Host "package — re-run with -SelfSignedTest for a local install test." -ForegroundColor Yellow
+    Write-Host "Built UNSIGNED package. Sideload installs need a signed package (-SelfSignedTest for local tests)." -ForegroundColor Yellow
 }
 
-# --- 5. Optional: real local install/uninstall round-trip ------------------
+# --- 5. Optional: local install --------------------------------------------
 if ($InstallLocally) {
     if (-not $SelfSignedTest) {
         throw "-InstallLocally requires -SelfSignedTest (Windows refuses to install an unsigned package)."
     }
-    Write-Host "Installing $msixOut via Add-AppxPackage..." -ForegroundColor Cyan
     Add-AppxPackage -Path $msixOut -ErrorAction Stop
-    $installed = Get-AppxPackage -Name $manifestForSubject.Package.Identity.Name
+    $installed = Get-AppxPackage -Name $IdentityName
     if (-not $installed) { throw "Add-AppxPackage reported success but Get-AppxPackage found nothing." }
     Write-Host "Installed: $($installed.PackageFullName)" -ForegroundColor Green
-    Write-Host "Verify manually (Start Menu entry, launch, no UAC prompt), then:" -ForegroundColor Cyan
-    Write-Host "  Remove-AppxPackage -Package '$($installed.PackageFullName)'" -ForegroundColor Cyan
+    Write-Host "Remove with: Remove-AppxPackage -Package '$($installed.PackageFullName)'" -ForegroundColor Cyan
 }
 
 Write-Host "Done." -ForegroundColor Green

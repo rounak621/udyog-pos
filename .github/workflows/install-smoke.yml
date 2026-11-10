@@ -1,8 +1,8 @@
 name: Install smoke test
 
-# Runs the exact one-line command shown on the website, on a clean runner, and
-# checks the app actually comes up. Catches a broken quickstart script, a
-# broken Dockerfile or a failing migration before a user hits it.
+# Builds the stack from this checkout with the repo's docker-compose.yml on a
+# clean runner and checks the app comes up. Catches a broken Dockerfile or a
+# failing migration. Manual only.
 
 on:
   workflow_dispatch:
@@ -15,30 +15,34 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - name: One-line install (as published)
-        working-directory: ${{ runner.temp }}
-        run: curl -fsSL https://raw.githubusercontent.com/Raktim94/nodedr-restaurant-pos/master/scripts/quickstart.sh | bash
+      - uses: actions/checkout@v4
+
+      - name: Throwaway .env for this run
+        run: |
+          {
+            echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)"
+            echo "JWT_SECRET=$(openssl rand -hex 48)"
+          } > .env
+
+      - name: Build and start
+        run: docker compose up -d --build
 
       - name: App answers on port 1995
         run: |
-          curl -sf http://localhost:1995/api/health
-          curl -sf -o /dev/null http://localhost:1995/signup
-          echo "Install OK"
+          node -e '
+            const urls = ["http://localhost:1995/api/health", "http://localhost:1995/signup"];
+            (async () => {
+              for (let i = 0; i < 60; i++) {
+                try {
+                  const res = await Promise.all(urls.map((u) => fetch(u)));
+                  if (res.every((r) => r.ok)) { console.log("Install OK"); return; }
+                } catch {}
+                await new Promise((r) => setTimeout(r, 5000));
+              }
+              console.error("App did not come up"); process.exit(1);
+            })();
+          '
 
       - name: Logs on failure
         if: failure()
-        working-directory: ${{ runner.temp }}/nodedr-restaurant-pos
         run: docker compose logs --tail=80
-
-  windows-script-syntax:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: PowerShell quickstart parses
-        shell: pwsh
-        run: |
-          $errs = $null
-          [System.Management.Automation.Language.Parser]::ParseFile("$PWD/scripts/quickstart.ps1", [ref]$null, [ref]$errs) | Out-Null
-          if ($errs.Count) { $errs | ForEach-Object { Write-Error $_.Message }; exit 1 }
-          Write-Host "quickstart.ps1 parses cleanly"

@@ -1,68 +1,23 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Sanity-checks a built OrderRestro.msix before install-testing, sideload
-    distribution, or Store submission. Does NOT replace the Windows App
-    Certification Kit (WACK) — run that too before a real Store submission
-    (see README.md "Store submission checklist").
-
-.DESCRIPTION
-    Unpacks the .msix (it's a zip container) into a temp directory and checks:
-      1. AppxManifest.xml inside the package parses and has a real (non-
-         placeholder) Publisher identity.
-      2. Declared <Capability>/<rescap:Capability> names are on an explicit
-         allow-list (internetClient, runFullTrust) — fails loudly if anything
-         broader (broadFileSystemAccess, any device-class capability, etc.)
-         ever gets added, since that would silently violate the hardening
-         brief's minimum-capability requirement.
-      3. No development/build/secret artifacts shipped inside the package
-         (.pdb, .env, source .ts/.js/.cs, node_modules, .git, docker-compose
-         files, test files).
-      4. The launcher executable and WebView2Loader native dependency are
-         actually present (a publish/staging mistake could produce a package
-         that installs but can't launch).
-      5. If the package is signed, runs `signtool verify /pa` and reports
-         the result. An unsigned package is reported as such, not as a
-         failure — local Developer-Mode testing intentionally uses unsigned
-         packages.
+    Structural checks on a built UDYOGPOS.msix: manifest identity, minimal
+    capabilities, no dev artifacts, executable and assets present.
 
 .PARAMETER MsixPath
-    Path to the .msix to validate. Defaults to ./out/OrderRestro.msix (the
-    build-windows-msix.ps1 default output location).
+    Path to the .msix. Defaults to ./out/UDYOGPOS.msix.
 
-.PARAMETER AllowPlaceholderPublisher
-    Downgrades the placeholder-Publisher check from a failure to a warning.
-    ONLY for a package built with build-windows-msix.ps1's -SelfSignedTest
-    (which deliberately signs with a throwaway cert whose subject is that
-    same placeholder CN, so Publisher == signer for a local/CI install
-    round-trip to succeed at all). Do not pass this when validating a
-    package meant for real sideload/Store submission — the default
-    (without this switch) is the loud, ship-blocking failure the
-    placeholder is meant to produce.
-
-.PARAMETER ExpectEmbeddedServer
-    Set when validating a package built with build-windows-msix.ps1's
-    -IncludeEmbeddedServer. A real Node.js/Postgres dependency tree
-    legitimately contains package.json, node_modules, and test/ folders
-    by the thousand (every installed npm package ships its own) — the
-    generic dev-artifact check's node_modules/package.json/test-folder
-    patterns would be near-100%-false-positive against that, so this
-    switch scopes that check to skip the server\ subtree and instead runs
-    a small set of checks purpose-built for it (see "server assets" checks
-    below): the embedded runtime binaries are actually present, and
-    nothing that WOULD still be a real problem there (.env, .pdb, .git) is.
+.PARAMETER AllowDevIdentity
+    Downgrades the "still the fake DEV identity" check to a warning. Use it
+    only for CI/local self-signed test builds.
 
 .EXAMPLE
-    ./validate-msix.ps1
-    ./validate-msix.ps1 -MsixPath .\out\OrderRestro.msix
-    ./validate-msix.ps1 -AllowPlaceholderPublisher   # CI/local self-signed test builds only
-    ./validate-msix.ps1 -ExpectEmbeddedServer        # packages built with -IncludeEmbeddedServer
+    ./validate-msix.ps1 -AllowDevIdentity
 #>
 [CmdletBinding()]
 param(
-    [string]$MsixPath = (Join-Path $PSScriptRoot 'out\OrderRestro.msix'),
-    [switch]$AllowPlaceholderPublisher,
-    [switch]$ExpectEmbeddedServer
+    [string]$MsixPath = (Join-Path $PSScriptRoot 'out\UDYOGPOS.msix'),
+    [switch]$AllowDevIdentity
 )
 
 $ErrorActionPreference = 'Stop'
@@ -86,23 +41,15 @@ if (-not (Test-Path $MsixPath)) {
 }
 Write-Host "Validating: $MsixPath`n" -ForegroundColor White
 
-$tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("orderrestro-validate-" + [Guid]::NewGuid())
+$tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("udyogpos-validate-" + [Guid]::NewGuid())
 New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
 try {
     $zipPath = Join-Path $tempDir 'package.zip'
     Copy-Item $MsixPath $zipPath
-    # Expand-Archive's cmdlet layer adds real per-file overhead on an
-    # archive with tens of thousands of small files (an embedded-server
-    # build's node_modules) — call the same underlying API directly instead.
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [System.IO.Compression.ZipFile]::ExtractToDirectory($zipPath, $tempDir)
 
     Write-Host "Enumerating package contents..." -ForegroundColor DarkGray
-    # One filesystem walk instead of ~15 separate `Get-ChildItem -Recurse`
-    # passes (one per forbidden pattern/dir, repeated per check below) —
-    # each full-tree walk was getting materially slower as the embedded-
-    # server package grew to tens of thousands of real (dereferenced)
-    # files. Every check below filters these in-memory lists instead.
     $allFiles = Get-ChildItem -Path $tempDir -Recurse -File -ErrorAction SilentlyContinue
     $allDirs = Get-ChildItem -Path $tempDir -Recurse -Directory -ErrorAction SilentlyContinue
     Write-Host "  $($allFiles.Count) files, $($allDirs.Count) directories" -ForegroundColor DarkGray
@@ -115,14 +62,14 @@ try {
         $script:manifest = [xml](Get-Content $manifestPath)
     }
 
-    Test-Check "Publisher identity is not the placeholder" {
-        $publisher = $manifest.Package.Identity.Publisher
-        if ([string]::IsNullOrWhiteSpace($publisher)) { throw "Publisher is empty" }
-        if ($publisher -match 'REPLACE-WITH-YOUR-PARTNER-CENTER-PUBLISHER-ID') {
-            if ($AllowPlaceholderPublisher) {
-                $script:warnings += "Publisher is still the placeholder CN — expected for a -SelfSignedTest build, but this package must NOT be sideloaded/submitted as-is."
+    Test-Check "Package identity is not the fake DEV identity" {
+        $identity = $manifest.Package.Identity
+        if ([string]::IsNullOrWhiteSpace($identity.Publisher)) { throw "Publisher is empty" }
+        if ($identity.Publisher -eq 'CN=UDYOG Dev' -or $identity.Name -eq 'UDYOG.POS.Dev') {
+            if ($AllowDevIdentity) {
+                $script:warnings += "Package uses the fake DEV identity; fine for a test build, never for release."
             } else {
-                throw "Publisher is still the placeholder — set the real Partner Center CN before shipping this package (pass -AllowPlaceholderPublisher only for a -SelfSignedTest build)"
+                throw "Package uses the fake DEV identity; pass the real identity to build-windows-msix.ps1 (or -AllowDevIdentity for a test build)"
             }
         }
     }
@@ -185,19 +132,8 @@ try {
             'appsettings.*.json'
         )
         $forbiddenDirNames = @('node_modules', '.git', 'test', 'tests', '__tests__')
-        # A real Node/Postgres dependency tree under server\ legitimately
-        # contains thousands of package.json/node_modules/test folders —
-        # every installed npm package ships its own. This check keeps its
-        # full strictness for the Launcher\ half of the package (where none
-        # of that is ever legitimate) and is scoped to skip server\
-        # entirely — that subtree gets its own purpose-built checks below.
-        $serverDir = Join-Path $tempDir 'server'
         $scopeFiles = $allFiles
         $scopeDirs = $allDirs
-        if ($ExpectEmbeddedServer) {
-            $scopeFiles = $scopeFiles | Where-Object { -not $_.FullName.StartsWith($serverDir, [StringComparison]::OrdinalIgnoreCase) }
-            $scopeDirs = $scopeDirs | Where-Object { -not $_.FullName.StartsWith($serverDir, [StringComparison]::OrdinalIgnoreCase) }
-        }
         $fileHits = $scopeFiles | Where-Object { $name = $_.Name; ($forbiddenFilePatterns | Where-Object { $name -like $_ }).Count -gt 0 }
         $dirHits = $scopeDirs | Where-Object { $forbiddenDirNames -contains $_.Name }
         $hits = @($fileHits) + @($dirHits)
@@ -207,47 +143,8 @@ try {
         }
     }
 
-    if ($ExpectEmbeddedServer) {
-        Test-Check "Embedded server runtime assets are present" {
-            $serverDir = Join-Path $tempDir 'server'
-            $required = @(
-                'postgres\bin\pg_ctl.exe',
-                'postgres\bin\initdb.exe',
-                'postgres\bin\postgres.exe',
-                'node\node.exe',
-                'backend\dist\src\main.js',
-                'backend\node_modules\prisma\build\index.js',
-                'web\apps\web\server.js'
-            )
-            foreach ($rel in $required) {
-                if (-not (Test-Path (Join-Path $serverDir $rel))) {
-                    throw "Missing embedded server asset: server\$rel — stage-server-assets.ps1 likely failed silently or its output layout changed without this check being updated"
-                }
-            }
-        }
-
-        Test-Check "No real secrets baked into the embedded server assets" {
-            # backend.env (with the real, generated JWT_SECRET) is written
-            # at RUNTIME to %LOCALAPPDATA%\OrderRestro\server\ — it must
-            # never exist inside the built package itself. .pdb/.git
-            # likewise have no legitimate reason to appear even inside a
-            # real node_modules tree.
-            $serverDir = Join-Path $tempDir 'server'
-            $serverFiles = $allFiles | Where-Object { $_.FullName.StartsWith($serverDir, [StringComparison]::OrdinalIgnoreCase) }
-            $serverDirs = $allDirs | Where-Object { $_.FullName.StartsWith($serverDir, [StringComparison]::OrdinalIgnoreCase) }
-            $patterns = '*.env', '.env*', '*.pdb'
-            $fileHits = $serverFiles | Where-Object { $name = $_.Name; ($patterns | Where-Object { $name -like $_ }).Count -gt 0 }
-            $dirHits = $serverDirs | Where-Object { $_.Name -eq '.git' }
-            $hits = @($fileHits) + @($dirHits)
-            if ($hits.Count -gt 0) {
-                $names = ($hits | Select-Object -First 10 -ExpandProperty FullName) -join "; "
-                throw "Found $($hits.Count) forbidden file(s) under server\: $names"
-            }
-        }
-    }
-
     Test-Check "Launcher executable and WebView2Loader.dll are present" {
-        if (-not ($allFiles | Where-Object Name -eq 'OrderRestro.exe')) { throw "OrderRestro.exe not found in package — publish/staging likely failed silently" }
+        if (-not ($allFiles | Where-Object Name -eq 'UDYOGPOS.exe')) { throw "UDYOGPOS.exe not found in package — publish/staging likely failed silently" }
         if (-not ($allFiles | Where-Object Name -eq 'WebView2Loader.dll')) { throw "WebView2Loader.dll not found — the launcher will fail at runtime with no native WebView2 loader present" }
     }
 

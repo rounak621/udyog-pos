@@ -1,26 +1,12 @@
 name: Publish Docker images
 
-# Builds and publishes the backend/web images that the CasaOS/ZimaOS app
-# store manifest (casaos/docker-compose.yml) pulls as pre-built,
-# version-pinned images. CasaOS installs an app straight from its compose
-# file with no build step and no access to this repo's source, so `build:`
-# (used in the repo-root docker-compose.yml for a `git clone` + build flow)
-# is not an option there — the CasaOS manifest instead references
-# `ghcr.io/raktim94/nodedr-restaurant-pos-{backend,web}:<version>`, and
-# those tags only exist because this workflow pushed them.
+# Builds and publishes the backend/web images to GHCR under this repository's
+# owner (ghcr.io/<owner>/udyog-pos-{backend,web}). Manual only.
 #
 # Each architecture is built on a NATIVE runner (ubuntu-24.04-arm for arm64)
-# and the two digests are merged into one multi-arch tag afterwards. The old
-# single-job QEMU build emulated arm64 and ran the Next.js build ~10x slower,
-# which pushed the web image past the 60 minute job limit and got the run
-# cancelled.
-#
-# Multi-arch (amd64 + arm64) on purpose: a real share of CasaOS/ZimaOS boxes
-# are ARM SBCs, and declaring `architectures: [amd64, arm64]` in the
-# x-casaos manifest without actually publishing an arm64 image would install
-# a broken app on that hardware. Pushed to GHCR (same registry as sibling
-# project nodedr-pos) using the automatic `secrets.GITHUB_TOKEN` — no
-# manually-created registry credential needed.
+# and the two digests are merged into one multi-arch tag afterwards (QEMU
+# emulation made the Next.js build too slow for the job time limit).
+# Uses the automatic secrets.GITHUB_TOKEN; no extra registry credential.
 
 # A push to master publishes only :edge and :sha-<commit>, so unreleased code can never replace the image a
 # version tag (and every install pinned to it) points at. A version tag (vX.Y.Z) or a manual run with a
@@ -82,12 +68,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [nodedr-restaurant-pos-backend, nodedr-restaurant-pos-web]
+        image: [udyog-pos-backend, udyog-pos-web]
         platform: [linux/amd64, linux/arm64]
         include:
-          - image: nodedr-restaurant-pos-backend
+          - image: udyog-pos-backend
             dockerfile: apps/backend/Dockerfile
-          - image: nodedr-restaurant-pos-web
+          - image: udyog-pos-web
             dockerfile: apps/web/Dockerfile
           - platform: linux/amd64
             runner: ubuntu-latest
@@ -137,7 +123,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        image: [nodedr-restaurant-pos-backend, nodedr-restaurant-pos-web]
+        image: [udyog-pos-backend, udyog-pos-web]
     steps:
       - uses: actions/download-artifact@v4
         with:

@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
 
-namespace OrderRestro.Launcher;
+namespace UdyogPos.Shell;
 
 /// <summary>
-/// First-run (and "change server") dialog: the restaurant's own OrderRestro
+/// First-run (and "change server") dialog: the UDYOG POS server
 /// server address on the LAN, e.g. 192.168.1.50 or 192.168.1.50:1995. No
 /// cloud account, no bundled server — this app is a pure client, per the
 /// hardening brief's offline-first / LAN-server requirement.
@@ -27,7 +27,7 @@ internal sealed class ServerSettingsForm : Form
 
     public ServerSettingsForm(string? currentUrl)
     {
-        Text = "Connect to OrderRestro";
+        Text = "Connect to UDYOG POS";
         FormBorderStyle = FormBorderStyle.FixedDialog;
         StartPosition = FormStartPosition.CenterScreen;
         MaximizeBox = false;
@@ -36,7 +36,7 @@ internal sealed class ServerSettingsForm : Form
 
         var titleLabel = new Label
         {
-            Text = "Connect to your restaurant's OrderRestro server",
+            Text = "Connect to your UDYOG POS server",
             Font = new Font("Segoe UI", 11f, FontStyle.Bold),
             AutoSize = false,
             Location = new Point(20, 16),
