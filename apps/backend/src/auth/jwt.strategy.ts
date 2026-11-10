@@ -27,7 +27,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly prisma: PrismaService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
+      // Web: the httpOnly cookie (unchanged). Apps: Authorization: Bearer.
+      // The cookie is tried first, so a browser always uses its cookie.
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        cookieExtractor,
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ]),
       ignoreExpiration: false,
       secretOrKey: config.getOrThrow<string>('JWT_SECRET'),
       // validate() needs the request for the @AllowWhenExpired flag.

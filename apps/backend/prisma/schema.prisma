@@ -92,6 +92,7 @@ model Restaurant {
   subscriptionPayments SubscriptionPayment[]
   subscriptionInvoices SubscriptionInvoice[]
   invoiceSeries        InvoiceSeries[]
+  appSessions          AppSession[]
 
   @@map("restaurants")
 }
@@ -282,6 +283,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   branches      UserBranch[]
+  appSessions   AppSession[]
   waiterTables  Table[]        @relation("TableWaiter")
   ordersCreated Order[]        @relation("OrderCreatedBy")
   auditLogs     AuditLog[]
@@ -369,6 +371,28 @@ model IntegrationApiKey {
   @@index([restaurantId])
   @@index([branchId])
   @@map("integration_api_keys")
+}
+
+// Mobile/desktop app sign-ins (2026-11-14). The web keeps its cookie session;
+// an app gets a 15-minute access JWT carrying this row's id (sid) plus a
+// 30-day refresh token. Only a SHA-256 hash of the refresh secret is stored;
+// it rotates on every refresh, and presenting a stale one revokes the session.
+model AppSession {
+  id               String     @id @default(cuid())
+  userId           String
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurantId     String
+  restaurant       Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  refreshTokenHash String
+  deviceName       String?
+  createdAt        DateTime   @default(now())
+  lastUsedAt       DateTime   @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+
+  @@index([userId, revokedAt])
+  @@index([restaurantId])
+  @@map("app_sessions")
 }
 
 model UserBranch {

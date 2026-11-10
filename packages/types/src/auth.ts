@@ -34,6 +34,8 @@ export const sessionUserSchema = z.object({
   permissions: z.array(z.string()),
   // UDYOG platform staff (instance-wide features). Never from a role.
   isPlatformAdmin: z.boolean(),
+  // Set only for app sign-ins (Bearer access token): the AppSession id.
+  sessionId: z.string().optional(),
 });
 export type SessionUser = z.infer<typeof sessionUserSchema>;
 

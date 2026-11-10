@@ -25,3 +25,4 @@ export * from "./restaurant-status";
 export * from "./platform";
 export * from "./billing";
 export * from "./invoice";
+export * from "./app-auth";

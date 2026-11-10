@@ -56,7 +56,16 @@ export class AuthService {
     };
   }
 
+  /** Web login: cookie session (see AuthController). */
   async login(dto: LoginDto) {
+    return this.issueSession(await this.verifyPasswordLogin(dto));
+  }
+
+  /**
+   * Email + password (+ 2FA) and the restaurant status check, shared by the
+   * web login and the app login (POST /auth/app/login).
+   */
+  async verifyPasswordLogin(dto: LoginDto): Promise<SessionUser> {
     // Emails are kept unique across ALL restaurants by register() and staff
     // create/update, but the DB constraint is only per restaurant. The
     // explicit orderBy keeps this lookup deterministic (oldest account wins)
@@ -94,7 +103,7 @@ export class AuthService {
       isPlatformAdmin: user.isPlatformAdmin,
       allowExpired: true,
     });
-    return this.issueSession(user);
+    return this.toSessionUser(user);
   }
 
   async register(dto: RegisterDto) {
@@ -223,7 +232,13 @@ export class AuthService {
     return restaurant !== null;
   }
 
+  /** Web PIN login: cookie session (see AuthController). */
   async pinLogin(dto: PinLoginDto) {
+    return this.issueSession(await this.verifyPinLogin(dto));
+  }
+
+  /** PIN check and restaurant status, shared by web and app PIN login. */
+  async verifyPinLogin(dto: PinLoginDto): Promise<SessionUser> {
     // The user must belong to the restaurant that owns the terminal's branch.
     // Every failure (unknown user, other restaurant, no PIN, 2FA account,
     // wrong PIN) gets the same answer so accounts cannot be probed.
@@ -252,14 +267,17 @@ export class AuthService {
     assertRestaurantAllowed(user.restaurant, {
       isPlatformAdmin: user.isPlatformAdmin,
     });
-    return this.issueSession(user);
+    return this.toSessionUser(user);
   }
 
   private async issueSession(
-    user: Parameters<AuthService['toSessionUser']>[0],
+    userOrSession: Parameters<AuthService['toSessionUser']>[0] | SessionUser,
   ) {
-    const sessionUser = this.toSessionUser(user);
-    const token = await this.jwt.signAsync({ sub: user.id });
+    const sessionUser =
+      'role' in userOrSession
+        ? this.toSessionUser(userOrSession)
+        : userOrSession;
+    const token = await this.jwt.signAsync({ sub: sessionUser.id });
     return { token, user: sessionUser };
   }
 }
