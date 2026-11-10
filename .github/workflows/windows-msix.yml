@@ -1,11 +1,33 @@
 name: Windows MSIX build
 
 # Builds the UDYOG POS Windows shell (windows/msix) on a real Windows runner
-# and uploads the .msix as an artifact. Manual only. Uses the fake DEV
-# identity and a throwaway self-signed test cert; no real secrets, no release.
+# and uploads the .msix (plus its throwaway test .cer) as an artifact.
+# Manual only. Signs ONLY with a throwaway self-signed test cert; no real
+# secrets, no Store upload, no release. Empty inputs = fake DEV identity.
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      identity_name:
+        description: "MSIX Identity Name (empty = UDYOG.POS.Dev)"
+        required: false
+        default: ""
+      publisher:
+        description: "MSIX Publisher, e.g. CN=... (empty = CN=UDYOG Dev)"
+        required: false
+        default: ""
+      publisher_display_name:
+        description: "Publisher display name (empty = DEV value)"
+        required: false
+        default: ""
+      version:
+        description: "Package version Major.Minor.Build.Revision (empty = 0.1.0.0)"
+        required: false
+        default: ""
+      default_server_url:
+        description: "Optional https server address that pre-fills the first-run form"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -30,14 +52,29 @@ jobs:
           if (-not $makeappx) { throw "makeappx.exe not found under Windows Kits 10" }
           $makeappx.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
-      - name: Build + package (DEV identity, self-signed test cert)
+      - name: Build + package (self-signed test cert)
         shell: pwsh
         working-directory: windows/msix
-        run: ./build-windows-msix.ps1 -Configuration Release -SelfSignedTest
+        # Inputs go through env vars, never pasted into the script text.
+        env:
+          IN_IDENTITY_NAME: ${{ inputs.identity_name }}
+          IN_PUBLISHER: ${{ inputs.publisher }}
+          IN_PUBLISHER_DISPLAY_NAME: ${{ inputs.publisher_display_name }}
+          IN_VERSION: ${{ inputs.version }}
+          IN_DEFAULT_SERVER_URL: ${{ inputs.default_server_url }}
+        run: |
+          $buildArgs = @{ Configuration = 'Release'; SelfSignedTest = $true }
+          if ($env:IN_IDENTITY_NAME) { $buildArgs.IdentityName = $env:IN_IDENTITY_NAME }
+          if ($env:IN_PUBLISHER) { $buildArgs.Publisher = $env:IN_PUBLISHER }
+          if ($env:IN_PUBLISHER_DISPLAY_NAME) { $buildArgs.PublisherDisplayName = $env:IN_PUBLISHER_DISPLAY_NAME }
+          if ($env:IN_VERSION) { $buildArgs.Version = $env:IN_VERSION }
+          if ($env:IN_DEFAULT_SERVER_URL) { $buildArgs.DefaultServerUrl = $env:IN_DEFAULT_SERVER_URL }
+          ./build-windows-msix.ps1 @buildArgs
 
       - name: Validate package structure
         shell: pwsh
         working-directory: windows/msix
+        # The DEV identity is expected here; validate warns instead of failing.
         run: ./validate-msix.ps1 -MsixPath ./out/UDYOGPOS.msix -AllowDevIdentity
 
       - name: Upload MSIX artifact
