@@ -1,0 +1,87 @@
+name: Build images
+
+# Reusable: builds the backend and web images for one commit and pushes them
+# to GHCR with two tags: the short commit SHA (what deploy.sh deploys) and a
+# moving label (`staging` or `main`). Called by deploy-staging.yml and
+# deploy-production.yml; never deploys by itself.
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit SHA to build
+        type: string
+        required: true
+      label:
+        description: Extra tag, e.g. staging or main
+        type: string
+        required: true
+    outputs:
+      tag:
+        description: Short SHA tag of the pushed images
+        value: ${{ jobs.build.outputs.tag }}
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  BACKEND_IMAGE: ghcr.io/rounak621/udyog-pos-backend
+  WEB_IMAGE: ghcr.io/rounak621/udyog-pos-web
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ inputs.ref }}
+
+      - id: meta
+        name: Short SHA tag
+        run: echo "tag=$(git rev-parse --short=12 HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3.10.0
+
+      - uses: docker/login-action@v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Backend image
+        uses: docker/build-push-action@v6.15.0
+        with:
+          context: .
+          file: apps/backend/Dockerfile
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            APP_VERSION=${{ steps.meta.outputs.tag }}
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:${{ steps.meta.outputs.tag }}
+            ${{ env.BACKEND_IMAGE }}:${{ inputs.label }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      # Next.js bakes BACKEND_URL (rewrites) and NEXT_PUBLIC_* in at build
+      # time. backend:4000 is the compose-internal name in both staging and
+      # production, so one image works for both.
+      - name: Web image
+        uses: docker/build-push-action@v6.15.0
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            BACKEND_URL=http://backend:4000
+            NEXT_PUBLIC_SUPPORT_EMAIL=${{ vars.NEXT_PUBLIC_SUPPORT_EMAIL }}
+          tags: |
+            ${{ env.WEB_IMAGE }}:${{ steps.meta.outputs.tag }}
+            ${{ env.WEB_IMAGE }}:${{ inputs.label }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web

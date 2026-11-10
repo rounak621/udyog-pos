@@ -99,6 +99,9 @@ log "previous tag: ${PREVIOUS_TAG:-<none>} -> new tag: $NEW_TAG (saved in $PREVI
 
 if start_tag "$NEW_TAG" && wait_healthy "$NEW_TAG"; then
   echo "$NEW_TAG" > "$CURRENT_TAG_FILE"
+  # A changed Caddyfile (bind-mounted) needs a reload; harmless if unchanged.
+  TAG="$NEW_TAG" compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile \
+    || log "warning: caddy reload failed (check: docker compose logs caddy)"
   TAG="$NEW_TAG" compose ps
   log "OK: running $NEW_TAG"
   exit 0

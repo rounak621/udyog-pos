@@ -1,0 +1,69 @@
+name: Deploy staging
+
+# Push to `dev` -> CI -> build images -> deploy to the staging server.
+# Secrets: STAGING_HOST, STAGING_USER, STAGING_SSH_KEY, STAGING_DEPLOY_PATH,
+# optional STAGING_SSH_KNOWN_HOSTS (output of `ssh-keyscan <host>`).
+# GitHub Environment: staging.
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ github.sha }}
+
+  build:
+    needs: ci
+    uses: ./.github/workflows/build-images.yml
+    with:
+      ref: ${{ github.sha }}
+      label: staging
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Copy runtime files and deploy over SSH
+        env:
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.STAGING_SSH_KNOWN_HOSTS }}
+          HOST: ${{ secrets.STAGING_HOST }}
+          USER_NAME: ${{ secrets.STAGING_USER }}
+          DEPLOY_PATH: ${{ secrets.STAGING_DEPLOY_PATH }}
+          TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          if [ -n "$KNOWN_HOSTS" ]; then
+            printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            echo "::warning::STAGING_SSH_KNOWN_HOSTS not set; trusting the host key seen now"
+            ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+          fi
+          opts=(-i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
+          target="$USER_NAME@$HOST"
+          ssh "${opts[@]}" "$target" "mkdir -p '$DEPLOY_PATH/scripts'"
+          scp "${opts[@]}" docker-compose.prod.yml Caddyfile "$target:$DEPLOY_PATH/"
+          scp "${opts[@]}" scripts/deploy.sh scripts/rollback.sh "$target:$DEPLOY_PATH/scripts/"
+          ssh "${opts[@]}" "$target" "cd '$DEPLOY_PATH' && chmod +x scripts/deploy.sh scripts/rollback.sh && ./scripts/deploy.sh '$TAG'"
+          echo "Staging now runs $TAG" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,69 @@
+name: CI
+
+# Checks only: install, prisma validate, typecheck, unit tests. Never deploys.
+# Also called by the deploy workflows (workflow_call) with the exact commit
+# they are about to build.
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit to check (default: the triggering commit)"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      # pnpm version comes from "packageManager" in package.json.
+      - uses: pnpm/action-setup@v4.1.0
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared types
+        run: pnpm --filter @nodedr-restaurant/types build
+
+      - name: Prisma generate and validate
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+        run: |
+          pnpm --filter @nodedr-restaurant/backend exec prisma generate
+          pnpm --filter @nodedr-restaurant/backend exec prisma validate
+
+      - name: Typecheck types
+        run: pnpm --filter @nodedr-restaurant/types typecheck
+
+      - name: Typecheck backend
+        run: pnpm --filter @nodedr-restaurant/backend typecheck
+
+      - name: Typecheck web
+        run: pnpm --filter web typecheck
+
+      # All backend unit specs. They use mocks; the only database spec
+      # (verifactu.integration.spec.ts) skips itself without
+      # VERIFACTU_TEST_DATABASE_URL, which is not set here.
+      - name: Backend unit tests
+        run: pnpm --filter @nodedr-restaurant/backend test -- --ci
+
+      # packages/types has no test files of its own.
+      - name: Web unit tests
+        run: pnpm --filter web test
