@@ -20,7 +20,7 @@ import { UserMenu } from "./user-menu";
 
 // The restaurant's own logo + name lead the sidebar header — this is
 // white-label self-hosted software, so the operator's branding takes the
-// prime spot an operator actually looks at. The Nodedr OrderRestro product
+// prime spot an operator actually looks at. The original product
 // mark moves to a small credit line at the bottom (BrandFooter) instead of
 // competing with it up here. Falls back to the product mark only until the
 // restaurant sets its own logo/name under Settings.

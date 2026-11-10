@@ -1,4 +1,7 @@
-// NodeDR OrderRestro updater — a tiny sidecar that moves the app's containers to a
+// Development/self-hosting helper, not the product path (the hosted service
+// deploys with scripts/deploy.sh; see docs/DEPLOY.md).
+//
+// UDYOG POS updater — a tiny sidecar that moves the app's containers to a
 // specific published version. Needed because a container can't replace itself,
 // and because CasaOS pins every image to an exact version (no :latest), so
 // "pull the same tag again" (Watchtower) would never find anything new.

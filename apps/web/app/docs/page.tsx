@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DocPage, DocSection } from "@/components/marketing/doc-page";
-import { downloadHref } from "@/lib/downloads";
 
 export const metadata: Metadata = {
   title: "Documentation — UDYOG POS",
-  description: "API & MCP, accessibility, and India features docs for a self-hosted UDYOG POS instance.",
+  description: "API & MCP, accessibility, and India features docs for UDYOG POS.",
 };
 
 const docs = [
@@ -44,18 +43,18 @@ export default function DocsIndexPage() {
         </div>
       </DocSection>
 
-      <DocSection heading="Full setup & architecture docs">
+      <DocSection heading="Source code">
         <p>
-          Installation, environment variables, and the full architecture reference live in the{" "}
+          The technical notes are in the{" "}
           <a
-            href={downloadHref("github")}
+            href="https://github.com/rounak621/udyog-pos"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary underline underline-offset-4"
           >
-            GitHub repository
+            source code repository
           </a>
-          &rsquo;s README and docs folder.
+          &rsquo;s docs folder.
         </p>
       </DocSection>
     </DocPage>

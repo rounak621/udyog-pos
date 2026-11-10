@@ -2,7 +2,7 @@
 
 This covers the self-service customer kiosk (a 23.8" landscape Android touchscreen,
 RK3576 / Android 14 / 4 GB RAM) and the staff kitchen-display tablet (HONOR Pad X8a),
-both served by the **same** OrderRestro instance. Nothing here needs an APK or a Play
+both served by the **same** UDYOG POS instance. Nothing here needs an APK or a Play
 Store listing: the kiosk is a browser page that can be added to the home screen as a
 full-screen web app (PWA shortcut).
 

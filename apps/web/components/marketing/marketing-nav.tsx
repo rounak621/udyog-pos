@@ -1,16 +1,14 @@
 "use client";
 
-import { Github, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
-import { downloadHref } from "@/lib/downloads";
 
 const links = [
   { href: "#features", label: "Features" },
   { href: "#security", label: "Security" },
-  { href: "#get-started", label: "Get started" },
 ];
 
 export function MarketingNav() {
@@ -36,18 +34,11 @@ export function MarketingNav() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <a
-            href={downloadHref("github")}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Github className="size-4" />
-            GitHub
-          </a>
           <Button variant="ghost" size="default" render={<Link href="/login" />}>
             Sign in
           </Button>
           <Button variant="default" size="default" render={<Link href="/signup" />}>
-            Get started free
+            Get started
           </Button>
         </div>
 
@@ -80,7 +71,7 @@ export function MarketingNav() {
                 Sign in
               </Button>
               <Button variant="default" render={<Link href="/signup" />}>
-                Get started free
+                Get started
               </Button>
             </div>
           </nav>

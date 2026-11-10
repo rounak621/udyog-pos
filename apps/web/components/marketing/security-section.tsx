@@ -17,9 +17,9 @@ const points = [
   },
   {
     icon: ScanEye,
-    title: "Your data stays on your server",
+    title: "Each restaurant's data kept separate",
     description:
-      "Self-hosted on your own LAN or VPS — no restaurant or customer data is ever sent to a third-party cloud you don't control.",
+      "Every request is checked against the signed-in user's restaurant and branch, so one restaurant cannot read another's orders or customers.",
   },
   {
     icon: FileCheck2,
@@ -38,8 +38,8 @@ export function SecuritySection() {
             Security isn&rsquo;t a checkbox here
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Every module went through a real audit pass before this page did.
-            Read the details, don&rsquo;t just take our word for it.
+            How sign-in, money and restaurant data are protected, in plain
+            words.
           </p>
         </Reveal>
 

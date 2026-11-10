@@ -4,24 +4,22 @@ Last updated 15 August 2026. Also published as a live page at `/docs/compliance-
 
 ## This is not legal advice
 
-This document explains how OrderRestro is built with reference to Indian law, so a restaurant operator deploying it can have an informed conversation with their own advisor — it is not a legal opinion, a certification, or a substitute for review by a qualified lawyer or chartered accountant. Laws referenced here (the DPDP Act 2023, IT Rules, CGST Rules, and CCPA guidelines) are current as of this document's last-updated date and may have changed since.
+This document explains how UDYOG POS is built with reference to Indian law, so a restaurant operator deploying it can have an informed conversation with their own advisor — it is not a legal opinion, a certification, or a substitute for review by a qualified lawyer or chartered accountant. Laws referenced here (the DPDP Act 2023, IT Rules, CGST Rules, and CCPA guidelines) are current as of this document's last-updated date and may have changed since.
 
 ## Who is the "data fiduciary"?
 
-OrderRestro is self-hosted software, not a cloud service Nodedr Infotech operates on your behalf. When a restaurant deploys OrderRestro on its own server, **that restaurant is the Data Fiduciary** under the Digital Personal Data Protection Act, 2023 (DPDP Act) for the customer and staff personal data it collects through the app — the same way a restaurant using a paper register or a locally-run spreadsheet would be. Nodedr Infotech does not receive, store, or process that data on its own infrastructure in a self-hosted deployment.
-
-This has a practical upside: because the entire stack (Postgres, API, and web app) runs on hardware the restaurant controls, data residency and cross-border transfer questions under the DPDP Act are largely avoided by construction — the data simply never leaves the deploying operator's own server unless they choose to move it.
+UDYOG POS is a hosted service operated by UDYOG: each restaurant's customer and staff data is stored on UDYOG's servers, kept separate per restaurant. Which party is the Data Fiduciary and which is a Data Processor under the Digital Personal Data Protection Act, 2023 (DPDP Act) for that data, where the data is stored, and what the contract with each restaurant must say, are open questions for UDYOG's lawyer; this document does not decide them.
 
 ## DPDP Act, 2023 — what the software supports
 
-The DPDP Act gives individuals ("Data Principals") rights to access, correct, and erase their personal data, and requires Data Fiduciaries to collect only what's needed for a stated purpose, retain it no longer than necessary, and provide a grievance-redressal channel. OrderRestro's data model and controls that a deploying restaurant can use to meet these:
+The DPDP Act gives individuals ("Data Principals") rights to access, correct, and erase their personal data, and requires Data Fiduciaries to collect only what's needed for a stated purpose, retain it no longer than necessary, and provide a grievance-redressal channel. UDYOG POS's data model and controls that a deploying restaurant can use to meet these:
 
 - Customer records (name, phone, order/visit history, loyalty points) are editable and deletable by any staff member with the `customers.manage` permission — supporting correction and erasure requests.
 - Only the data fields actually used by POS/CRM/loyalty features are collected — no speculative profile fields.
 - Role-based access control restricts who on staff can view customer contact details and order history, supporting a purpose-limitation and least-privilege posture.
-- Every table/order/session is scoped to the restaurant that created it — verified during a security audit that one restaurant's staff cannot query another restaurant's customer data, relevant if you run OrderRestro for multiple outlets on shared infrastructure.
+- Every table/order/session is scoped to the restaurant that created it — verified during a security audit that one restaurant's staff cannot query another restaurant's customer data, relevant if you run UDYOG POS for multiple outlets on shared infrastructure.
 
-What OrderRestro does *not* provide out of the box: a built-in consent-capture flow, an automated data-retention/deletion schedule, or a hosted grievance-officer contact form — these are organizational obligations the deploying restaurant (as Data Fiduciary) needs to put in place itself (e.g. a printed/posted privacy notice, a designated grievance contact, and a manual or scripted retention policy for old customer records).
+What UDYOG POS does *not* provide out of the box: a built-in consent-capture flow, an automated data-retention/deletion schedule, or a hosted grievance-officer contact form — these are organizational obligations the deploying restaurant (as Data Fiduciary) needs to put in place itself (e.g. a printed/posted privacy notice, a designated grievance contact, and a manual or scripted retention policy for old customer records).
 
 ## IT Act, 2000 & reasonable security practices
 
@@ -35,16 +33,16 @@ The IT (Reasonable Security Practices and Procedures and Sensitive Personal Data
 - Uploaded files are validated against their actual file-signature bytes, not just a client-declared filename or MIME type, and stored under randomized, non-executable filenames.
 - No hardcoded secrets in source; the backend refuses to start with a placeholder or short JWT signing secret.
 
-Transport encryption (HTTPS/TLS) for any deployment reachable beyond a trusted LAN is the deploying operator's responsibility — typically via a reverse proxy (Caddy, nginx, or a tunnel provider) in front of the app. A LAN-only deployment behind a restaurant's own router is not directly exposed to the public internet by default.
+The hosted service is served only over HTTPS: a reverse proxy (Caddy) in front of the app obtains and renews the TLS certificate automatically, and session cookies are marked Secure.
 
 ## GST invoicing (CGST Rules, Rule 46)
 
-Receipts generated by OrderRestro display the branch's GSTIN (when configured in Settings), an itemized CGST/SGST breakup, and a per-order invoice/order number. Whether your specific invoice numbering and layout fully satisfies Rule 46 of the CGST Rules, 2017 for your registration and turnover bracket (e.g. sequential numbering per financial year, HSN/SAC code requirements at your turnover level) is something to confirm with your chartered accountant before relying on OrderRestro receipts as your sole tax-invoice record — this software generates a receipt in the right shape, it does not itself certify GST compliance for your specific registration.
+Receipts generated by UDYOG POS display the branch's GSTIN (when configured in Settings), an itemized CGST/SGST or IGST breakup, HSN/SAC codes, and, once a bill is fully paid, a consecutive invoice number per series and financial year (PREFIX/FYSHORT/NNNNNN). Whether this numbering and layout fully satisfies Rule 46 of the CGST Rules, 2017 for your registration and turnover is something to confirm with your chartered accountant before relying on UDYOG POS receipts as your sole tax-invoice record: the software generates a receipt in this shape, it does not itself certify GST compliance for your specific registration.
 
 ## Honest UI, on purpose (CCPA dark-patterns guidelines, 2023)
 
-The Central Consumer Protection Authority's 2023 guidelines on misleading advertisements and dark patterns explicitly name fabricated urgency, fake activity counters, and false social proof as prohibited practices. The marketing site's download counter is a real, server-side count of actual link click-throughs, starting from zero — never pre-seeded with an invented number (see `apps/backend/src/modules/downloads`). If you build on this codebase, we'd ask you to keep that practice rather than quietly seed it later.
+The Central Consumer Protection Authority's 2023 guidelines on misleading advertisements and dark patterns explicitly name fabricated urgency, fake activity counters, and false social proof as prohibited practices. The UDYOG POS website shows no activity counters, ratings, reviews or testimonials.
 
 ## Questions
 
-For questions about this software's architecture or security posture, [open an issue on GitHub](https://github.com/Raktim94/nodedr-restaurant-pos/issues). For questions about your own restaurant's legal obligations as a Data Fiduciary or GST-registered business, please consult a qualified lawyer or chartered accountant — this document cannot answer those for your specific situation.
+For questions about UDYOG POS, contact UDYOG support. For questions about your own restaurant's legal obligations as a Data Fiduciary or GST-registered business, please consult a qualified lawyer or chartered accountant: this document cannot answer those for your specific situation.

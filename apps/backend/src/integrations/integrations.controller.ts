@@ -22,7 +22,7 @@ import type { IntegrationKeyContext } from './integrations.service';
 import { IntegrationsService } from './integrations.service';
 
 // The public REST API an external website's own backend calls as a
-// back end for OrderRestro — list locations, browse a location's menu,
+// back end for UDYOG POS — list locations, browse a location's menu,
 // place an order, book a table, check status. Authenticated by
 // Authorization: Bearer <integration api key>, never cookies — see
 // docs/integrations-api.md for the full reference and IntegrationApiKeyGuard

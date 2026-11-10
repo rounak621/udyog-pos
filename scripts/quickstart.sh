@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# Nodedr OrderRestro quickstart — macOS & Linux.
+# Development/self-hosting helper, not the product path (UDYOG POS runs as a
+# hosted service; see docs/DEPLOY.md).
+#
+# UDYOG POS local quickstart - macOS & Linux.
 #
 # Checks whether Docker is installed and running; installs it if not
 # (Docker Desktop via Homebrew on macOS, installing Homebrew first if needed, Docker Engine via the official
@@ -162,5 +165,5 @@ else
 fi
 
 cd "$REPO_DIR"
-echo "==> Installing and starting Nodedr OrderRestro..."
+echo "==> Installing and starting UDYOG POS..."
 $SUDO ./install.sh <"$TTY_IN"

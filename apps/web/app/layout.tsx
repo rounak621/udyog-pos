@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "UDYOG POS",
-  description: "Offline-first restaurant management system",
+  description: "Restaurant billing and management",
   manifest: "/manifest.json",
   icons: {
     icon: [{ url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" }],

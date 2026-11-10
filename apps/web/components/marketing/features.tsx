@@ -1,13 +1,13 @@
 import {
   ChefHat,
-  GitBranch,
   Gift,
   Package,
   Plug,
   QrCode,
   ShieldCheck,
   UtensilsCrossed,
-  WifiOff,
+  Receipt,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/reveal";
 
@@ -43,10 +43,10 @@ const features = [
       "Customer profiles, earn-and-redeem loyalty points, gift card issuance, and full visit history.",
   },
   {
-    icon: WifiOff,
-    title: "Offline-first by design",
+    icon: Receipt,
+    title: "India GST receipts",
     description:
-      "The whole stack runs on one local server. Order-taking, billing, KDS, and printing keep working with the WAN cable unplugged.",
+      "CGST/SGST or IGST breakup, HSN/SAC codes, FSSAI number and a consecutive invoice number on every fully paid bill.",
   },
   {
     icon: ShieldCheck,
@@ -55,10 +55,10 @@ const features = [
       "Granular, individually toggleable permissions and strict multi-tenant isolation — never a hardcoded role check.",
   },
   {
-    icon: GitBranch,
-    title: "No lock-in",
+    icon: FileSpreadsheet,
+    title: "Reports & exports",
     description:
-      "Self-host on Docker, CasaOS/ZimaOS, or a Windows client — your data never has to leave your building.",
+      "Sales, GST and invoice register reports by date range, with Excel, PDF and CSV export.",
   },
   {
     icon: Plug,

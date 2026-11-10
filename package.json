@@ -1,31 +1,28 @@
 {
-  "name": "nodedr-orderrestro",
+  "name": "udyog-pos",
   "private": true,
   "version": "0.1.0",
-  "description": "Nodedr OrderRestro — offline-first Restaurant Management System",
-  "author": "Raktim Ranjit <mail@raktimranjit.com> (https://github.com/Raktim94)",
+  "description": "UDYOG POS: restaurant billing and management",
+  "author": "UDYOG",
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Raktim94/nodedr-restaurant-pos.git"
+    "url": "https://github.com/rounak621/udyog-pos.git"
   },
   "bugs": {
-    "url": "https://github.com/Raktim94/nodedr-restaurant-pos/issues"
+    "url": "https://github.com/rounak621/udyog-pos/issues"
   },
-  "homepage": "https://orderrestro.nodedr.com/",
+  "homepage": "https://github.com/rounak621/udyog-pos",
   "keywords": [
     "restaurant-management",
     "restaurant-pos",
     "point-of-sale",
     "kitchen-display-system",
     "inventory-management",
-    "self-hosted",
-    "offline-first",
     "upi-payments",
     "gst-billing",
     "restaurant-payroll",
     "qr-ordering",
-    "casaos",
     "nestjs",
     "nextjs"
   ],

@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { hasPermission, useCurrentUser } from "@/hooks/use-auth";
 import { useBranch } from "@/hooks/use-branch";
+import { useSettings } from "@/hooks/use-settings";
+import { isIndiaBranch } from "@/lib/region";
 import { api, ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { SchedulesPanel } from "@/components/reports/schedules-panel";
@@ -29,6 +31,8 @@ const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 export default function ReportsPage() {
   const { branchId } = useBranch();
+  const { data: settings } = useSettings(branchId);
+  const isIndia = isIndiaBranch(settings?.branch);
   const { data: me } = useCurrentUser();
   const canExport = hasPermission(me?.user, "data.export");
   const [key, setKey] = useState("sales-daily");
@@ -99,7 +103,7 @@ export default function ReportsPage() {
                   <Download className="mr-2 h-4 w-4" /> {f === "xlsx" ? "Excel" : f.toUpperCase()}
                 </a>
               ))}
-            {canExport && (
+            {canExport && isIndia && (
               // India sales invoice register for the same date range (IST days).
               <a
                 href={`/api/v1/reports/invoice-register?${qs}&format=csv`}

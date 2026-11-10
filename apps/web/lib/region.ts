@@ -5,3 +5,8 @@
 export function isSpainBranch(branch: { country?: string | null; taxRegime?: string | null } | null | undefined): boolean {
   return branch?.country === "ES" || branch?.taxRegime === "ES_IVA";
 }
+
+/** India GST features (invoice register, HSN/SAC, FSSAI) apply to INDIA_GST branches. */
+export function isIndiaBranch(branch: { taxRegime?: string | null } | null | undefined): boolean {
+  return branch?.taxRegime === "INDIA_GST";
+}

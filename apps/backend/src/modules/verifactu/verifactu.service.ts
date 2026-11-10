@@ -1,4 +1,4 @@
-// Spain VERI*FACTU for OrderRestro: builds the append-only, hash-chained fiscal record for every paid
+// Spain VERI*FACTU for UDYOG POS: builds the append-only, hash-chained fiscal record for every paid
 // sale and every refund inside the same database transaction as the sale, and reports the records to
 // AEAT in the background. Implemented, not certified: see docs/verifactu.md for what remains (the
 // producer's Declaracion Responsable and a run against AEAT's pre-production portal).

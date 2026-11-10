@@ -1,12 +1,12 @@
-# OrderRestro integrations: MCP server and public API
+# UDYOG POS integrations: MCP server and public API
 
-OrderRestro exposes two separate ways to integrate with it programmatically,
+UDYOG POS exposes two separate ways to integrate with it programmatically,
 each with its own credential type. Both are managed from **Settings > API
 Keys** in the app.
 
 | | **Personal API keys (MCP)** | **Integration API keys** |
 |---|---|---|
-| Who it's for | You (a staff member), connecting an AI client or script | An external website/system using OrderRestro as a backend |
+| Who it's for | You (a staff member), connecting an AI client or script | An external website/system using UDYOG POS as a backend |
 | Identity | Acts as you, with your exact role permissions | No staff identity — carries its own explicit permission list |
 | Created by | Any logged-in staff member, for themselves | Anyone with the `settings.manage` permission (owners/admins) |
 | Scope | Everything you can already do in the app | Only what you tick when creating the key, optionally locked to one location |
@@ -104,14 +104,14 @@ curl -X POST https://your-domain/api/v1/mcp \
 
 ## 2. Integration API (for an external website's backend)
 
-A REST API an external system calls as OrderRestro's backend — browse a
+A REST API an external system calls as UDYOG POS's backend — browse a
 location's menu, place an order, book a table, check status. Create a key
 from **Settings > API Keys > Integration API keys > New key**: pick a name,
 optionally scope it to one location ("selected location"), and tick the
 exact permissions ("scopes") it needs.
 
 **This is meant for server-to-server calls** — your website's own backend
-calling OrderRestro, not embedding the raw key in browser JavaScript. The
+calling UDYOG POS, not embedding the raw key in browser JavaScript. The
 key is a reusable credential, not a per-resource token, so treat it like any
 other API secret.
 

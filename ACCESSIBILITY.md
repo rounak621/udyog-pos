@@ -4,7 +4,7 @@ Last updated 15 August 2026. Also published as a live page at `/docs/accessibili
 
 ## Our target
 
-Nodedr OrderRestro targets **WCAG 2.1 Level AA** across the marketing site and the product application (POS, dashboard, kitchen display, settings). This is the standard referenced by India's Rights of Persons with Disabilities Act, 2016 and its associated accessibility rules, and is the de facto baseline for software sold or deployed in India today.
+UDYOG POS targets **WCAG 2.1 Level AA** across the marketing site and the product application (POS, dashboard, kitchen display, settings). This is the standard referenced by India's Rights of Persons with Disabilities Act, 2016 and its associated accessibility rules, and is the de facto baseline for software sold or deployed in India today.
 
 This statement is a good-faith, current snapshot — not a certification. We have not engaged a third-party auditor or obtained formal WCAG-AA certification for this product.
 
@@ -32,4 +32,4 @@ We have not yet performed a full manual audit with users who rely on assistive t
 
 ## Reporting a problem
 
-If you encounter an accessibility barrier anywhere in this product, please [open an issue on GitHub](https://github.com/Raktim94/nodedr-restaurant-pos/issues) with as much detail as you can (page, assistive technology used, what you expected vs. what happened). This is an open-source project — accessibility fixes are treated as real bugs, not feature requests.
+If you meet an accessibility barrier anywhere in UDYOG POS, contact UDYOG support with the page, the assistive technology you used, and what you expected versus what happened. Accessibility problems are treated as bugs.

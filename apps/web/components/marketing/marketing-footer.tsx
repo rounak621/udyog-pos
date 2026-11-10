@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
-import { downloadHref } from "@/lib/downloads";
 
 const columns = [
   {
@@ -8,13 +7,12 @@ const columns = [
     links: [
       { href: "#features", label: "Features" },
       { href: "#security", label: "Security" },
-      { href: "#get-started", label: "Get started" },
     ],
   },
   {
     title: "Resources",
     links: [
-      { href: downloadHref("github"), label: "GitHub" },
+      { href: "https://github.com/rounak621/udyog-pos", label: "Source code" },
       { href: "/docs/api", label: "API & MCP" },
       { href: "/docs/accessibility", label: "Accessibility statement" },
       { href: "/docs/compliance-india", label: "India features" },
@@ -39,8 +37,8 @@ export function MarketingFooter() {
               <Logo size={28} />
             </Link>
             <p className="mt-3 max-w-xs text-sm text-muted-foreground">
-              Offline-first restaurant management, self-hosted on your own
-              server. Built by Nodedr Infotech Private Limited.
+              Restaurant billing, kitchen display, QR menu, India GST
+              receipts and reports.
             </p>
           </div>
 

@@ -1,8 +1,8 @@
 {
   "name": "@nodedr-restaurant/backend",
   "version": "0.0.1",
-  "description": "Nodedr OrderRestro API",
-  "author": "Raktim Ranjit <mail@raktimranjit.com> (https://github.com/Raktim94)",
+  "description": "UDYOG POS API",
+  "author": "UDYOG",
   "private": true,
   "license": "AGPL-3.0-only",
   "scripts": {

@@ -61,8 +61,8 @@ function SyncSettingsPageContent() {
         <div>
           <h2 className="text-base font-medium">Server sync</h2>
           <p className="text-sm text-muted-foreground">
-            Keep this PC and your central server in step, both ways. Work continues offline and
-            catches up when the connection returns. Newest edit wins.
+            Keep this installation and a central server in step, both ways. Changes are exchanged
+            when both can reach each other. Newest edit wins.
           </p>
         </div>
 

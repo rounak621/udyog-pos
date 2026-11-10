@@ -90,14 +90,7 @@ export default function AccessibilityPage() {
       <DocSection heading="Reporting a problem">
         <p>
           If you encounter an accessibility barrier anywhere in this product,
-          please open an issue on{" "}
-          <a
-            href="https://github.com/rounak621/udyog-pos/issues"
-            className="text-primary underline underline-offset-4"
-          >
-            GitHub
-          </a>{" "}
-          with as much detail as you can (page, assistive technology used,
+          please contact UDYOG support with as much detail as you can (page, assistive technology used,
           what you expected vs. what happened). Accessibility fixes are
           treated as real bugs, not feature requests.
         </p>

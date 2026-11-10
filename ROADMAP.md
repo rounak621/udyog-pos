@@ -8,7 +8,7 @@ inventory, CRM, payments, security, AI, etc. — ~305 line items each marked
 Shipped/Partial/Planned against the real codebase) see
 [`FEATURE-CHECKLIST.md`](./FEATURE-CHECKLIST.md). This file tracks the same
 ground phase-by-phase for engineering; that one is organized by product
-category for anyone (including the website) that wants "what does OrderRestro
+category for anyone (including the website) that wants "what does UDYOG POS
 actually do today."
 
 ## Current phase: 5–8 core features shipped (see each phase for what is and is not built)
