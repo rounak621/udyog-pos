@@ -97,3 +97,11 @@ UDYOG POS = restaurant POS, white-labelled from an AGPL-3.0 open-source repo, ow
 - Orders paid before this change have no invoice number (no backfill); receipts show no invoice line for them. Register: GET /reports/invoice-register (CSV/JSON, max 400 days).
 - Per-device series is planned for offline billing (InvoiceSeries.deviceId exists, unused).
 - CA questions pending: several series per GSTIN allowed? offline issue and upload later? cancelled bills? tax invoice vs bill of supply (5% no-ITC)? e-invoice threshold? FY rollover rules? Is a sale paid by gift card/store credit invoiced at payment?
+
+## Deploy decisions
+- Runtime: docker-compose.prod.yml (caddy, backend, web; optional postgres under profile `localdb`), Caddyfile, .env.production on the server only (template .env.production.example). Only Caddy publishes 80/443; /api/* and /socket.io/* go straight to backend:4000.
+- Branches: `dev` -> staging automatically (deploy-staging.yml). `main` -> production only by hand (deploy-production.yml, workflow_dispatch, GitHub Environment `production` with required reviewers; the commit must be reachable from main). Nothing deploys production on push. ci.yml runs on PRs and pushes to main/dev and never deploys.
+- Images: built only by GitHub Actions (build-images.yml), pushed to ghcr.io/rounak621/udyog-pos-{backend,web} tagged with the 12-char commit SHA plus `staging` or `main`. Never build on the server. Web is built with BACKEND_URL=http://backend:4000 so one image serves staging and production.
+- scripts/deploy.sh <tag> on the server: saves running tags (.deploy/PREVIOUS_TAGS), pulls, `up -d`, waits up to 120 s for health, restores the previous tag automatically on failure. scripts/rollback.sh <tag> redeploys a tag.
+- Migrations run at backend start (`prisma migrate deploy` in the Dockerfile CMD) before the API listens; they are forward-only, so keep them additive. Take a DB backup/snapshot before every production release.
+- Dependabot auto-merge only ever targets `dev`. Owner guide: docs/DEPLOY.md; launch items: docs/LAUNCH-CHECKLIST.md.
