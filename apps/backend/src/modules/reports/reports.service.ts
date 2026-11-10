@@ -9,6 +9,11 @@ import { localDate, localMinuteAndDay, zonedRange } from '../../common/time';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AccountingService } from '../accounting/accounting.service';
 import type { CsvValue } from './csv';
+import {
+  checkRegisterRange,
+  INVOICE_REGISTER_COLUMNS,
+  invoiceRegisterRow,
+} from './invoice-register';
 
 export interface ReportResult {
   key: string;
@@ -93,6 +98,55 @@ export class ReportsService {
 
   catalog(permissions: readonly string[]) {
     return REPORT_CATALOG.filter((r) => canViewReport(permissions, r.key));
+  }
+
+  /**
+   * India sales invoice register: orders of this branch whose invoice
+   * number was issued in [from, to] (IST calendar days), in issue order.
+   */
+  async invoiceRegister(branchId: string, from: string, to: string) {
+    const problem = checkRegisterRange(from, to);
+    if (problem) throw new BadRequestException(problem);
+    const branch = await this.prisma.branch.findUniqueOrThrow({
+      where: { id: branchId },
+      select: { taxId: true, gstNumber: true },
+    });
+    const orders = await this.prisma.order.findMany({
+      where: {
+        branchId,
+        invoiceNo: { not: null },
+        invoiceIssuedAt: zonedRange(from, to, 'Asia/Kolkata'),
+      },
+      orderBy: [{ invoiceIssuedAt: 'asc' }, { invoiceNo: 'asc' }],
+      select: {
+        invoiceNo: true,
+        invoiceIssuedAt: true,
+        orderNumber: true,
+        status: true,
+        guestName: true,
+        customer: { select: { name: true } },
+        customerGstin: true,
+        placeOfSupplyStateCode: true,
+        subtotal: true,
+        discountAmount: true,
+        loyaltyDiscountAmount: true,
+        taxAmount: true,
+        totalAmount: true,
+        items: {
+          select: {
+            lineTotal: true,
+            taxRateSnapshot: true,
+            hsnSacSnapshot: true,
+          },
+        },
+        payments: { select: { method: true } },
+        refunds: { select: { amount: true } },
+      },
+    });
+    return {
+      columns: INVOICE_REGISTER_COLUMNS,
+      rows: orders.map((o) => invoiceRegisterRow(o, branch)),
+    };
   }
 
   async run(

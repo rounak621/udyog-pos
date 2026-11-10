@@ -87,3 +87,13 @@ UDYOG POS = restaurant POS, white-labelled from an AGPL-3.0 open-source repo, ow
 - Kitchen auto-print uses the existing kot.created event (payload now also has orderId), de-duplicated per window (memory + sessionStorage udyogpos_autoprinted_kots).
 - MIN_SHELL_VERSION (optional): GET /system/shell-check reads the UDYOGPOS-Shell/<version> user-agent token; older apps see a non-blocking update banner.
 - Known gaps: no serial/Bluetooth printers, no label printers, no per-station printer routing beyond the station filter, C# is not unit-tested (compiled only by the manual windows-msix workflow), Store identity and code signing pending.
+
+## Invoice decisions
+- India sales invoice number: `<PREFIX>/<FYSHORT>/<6 digits>`, e.g. INV/2627/000001, at most 16 characters. Prefix = Branch.invoicePrefix (1-4 A-Z0-9, default INV). Financial year 1 Apr - 31 Mar in IST. Helpers: packages/types/src/invoice.ts (financialYearOf, formatInvoiceNo, istDisplayDate).
+- One consecutive series per (restaurant, prefix, financial year) in InvoiceSeries; branches sharing a prefix share the series, so two branches can never issue the same number. Order has a unique (invoiceRestaurantId, invoiceNo). Changing the prefix starts a new series from 000001.
+- Assigned only for INDIA_GST branches, once, inside the checkout transaction that makes the order fully PAID (apps/backend/src/modules/orders/invoice-number.ts). Partial payments get none; a rollback consumes none; a replayed checkout never allocates; an order with a number never gets a second.
+- Order numbers (YYYYMMDD-NNNN, IST day) are taken inside the create transaction under an advisory lock (orders/order-number.ts). Staff POST /orders is idempotent with clientRequestId.
+- Cancel only works on OPEN orders without payments, so it never touches a number. A refund keeps the order PAID and its number. Deleting an order that has a number is refused. Whether cancelled/refunded bills need anything more is to be confirmed with a CA.
+- Orders paid before this change have no invoice number (no backfill); receipts show no invoice line for them. Register: GET /reports/invoice-register (CSV/JSON, max 400 days).
+- Per-device series is planned for offline billing (InvoiceSeries.deviceId exists, unused).
+- CA questions pending: several series per GSTIN allowed? offline issue and upload later? cancelled bills? tax invoice vs bill of supply (5% no-ITC)? e-invoice threshold? FY rollover rules? Is a sale paid by gift card/store credit invoiced at payment?

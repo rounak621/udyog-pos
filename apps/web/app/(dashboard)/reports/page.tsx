@@ -99,6 +99,15 @@ export default function ReportsPage() {
                   <Download className="mr-2 h-4 w-4" /> {f === "xlsx" ? "Excel" : f.toUpperCase()}
                 </a>
               ))}
+            {canExport && (
+              // India sales invoice register for the same date range (IST days).
+              <a
+                href={`/api/v1/reports/invoice-register?${qs}&format=csv`}
+                className="inline-flex h-8 items-center rounded-lg border border-border px-3 text-sm hover:bg-secondary"
+              >
+                <Download className="mr-2 h-4 w-4" /> Invoice register (CSV)
+              </a>
+            )}
           </div>
 
           <Card className="overflow-x-auto p-4">

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Controller,
+  ForbiddenException,
   Get,
   Header,
   Param,
@@ -29,6 +30,35 @@ export class ReportsController {
   @Get()
   catalog(@CurrentUser() u: SessionUser) {
     return this.reports.catalog(u.permissions);
+  }
+
+  // India sales invoice register (before ':key' so it is not read as a key).
+  // JSON needs reports.access; CSV also needs data.export, like other exports.
+  @Auth('reports.access')
+  @Get('invoice-register')
+  async invoiceRegister(
+    @CurrentUser() u: SessionUser,
+    @Query('branchId') branchId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('format') format: string = 'json',
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    if (format !== 'csv' && format !== 'json') {
+      throw new BadRequestException('format must be csv or json');
+    }
+    if (format === 'csv' && !u.permissions.includes('data.export')) {
+      throw new ForbiddenException('Missing permission to export data');
+    }
+    await this.branchAccess.assertAccess(u.restaurantId, branchId);
+    const register = await this.reports.invoiceRegister(branchId, from, to);
+    if (format === 'json') return register;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="invoice-register-${from}-to-${to}.csv"`,
+    );
+    return toCsv(register.columns, register.rows);
   }
 
   @Auth('reports.access')
