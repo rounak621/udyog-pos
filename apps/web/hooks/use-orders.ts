@@ -15,6 +15,9 @@ import { api } from "@/lib/api";
 export interface CreatedOrder {
   id: string;
   orderNumber: string;
+  /** India sales invoice number, set once the order is fully paid. */
+  invoiceNo?: string | null;
+  invoiceIssuedAt?: string | null;
   subtotal: string;
   taxAmount: string;
   discountAmount: string;
@@ -128,6 +131,9 @@ export type AcceptanceStatus = "NOT_REQUIRED" | "PENDING" | "ACCEPTED" | "REJECT
 export interface OrderDetail {
   id: string;
   orderNumber: string;
+  /** India sales invoice number, set once the order is fully paid. */
+  invoiceNo?: string | null;
+  invoiceIssuedAt?: string | null;
   type: string;
   status: string;
   channel: OrderChannel;

@@ -83,14 +83,15 @@ model Restaurant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  branches           Branch[]
-  roles              Role[]
-  users              User[]
-  integrationApiKeys IntegrationApiKey[]
-  webhookEndpoints   WebhookEndpoint[]
+  branches             Branch[]
+  roles                Role[]
+  users                User[]
+  integrationApiKeys   IntegrationApiKey[]
+  webhookEndpoints     WebhookEndpoint[]
   subscriptions        Subscription[]
   subscriptionPayments SubscriptionPayment[]
   subscriptionInvoices SubscriptionInvoice[]
+  invoiceSeries        InvoiceSeries[]
 
   @@map("restaurants")
 }
@@ -116,6 +117,7 @@ model Branch {
   documents         Document[]
   verifactuSettings VerifactuSettings?
   verifactuRecords  VerifactuRecord[]
+  invoiceSeries     InvoiceSeries[]
 
   name      String
   address   String?
@@ -143,6 +145,8 @@ model Branch {
   defaultHsnSac String?
   // India: FSSAI food business licence number (14 digits), printed on bills.
   fssaiNumber   String?
+  // India: prefix of this branch's sales invoice series (null = "INV").
+  invoicePrefix String?
 
   // Online order / table-booking handling: false = staff must accept each
   // one from the dashboard; true = accepted automatically on arrival.
@@ -1397,6 +1401,17 @@ model Order {
   customerGstin          String?
   placeOfSupplyStateCode String?
 
+  // India sales invoice number (2026-11-13), e.g. INV/2627/000001. Assigned
+  // once, inside the checkout transaction that makes the order fully PAID;
+  // never reused or cleared. Orders paid before this have none.
+  invoiceNo           String?
+  invoiceSeriesId     String?
+  invoiceSeries       InvoiceSeries? @relation(fields: [invoiceSeriesId], references: [id], onDelete: SetNull)
+  invoiceIssuedAt     DateTime?
+  // Restaurant of the issuing series; set together with invoiceNo so the
+  // number is unique per restaurant (orders reach the restaurant via branch).
+  invoiceRestaurantId String?
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   billedAt  DateTime?
@@ -1409,6 +1424,8 @@ model Order {
 
   @@unique([branchId, orderNumber])
   @@unique([branchId, clientRequestId])
+  // NULLs never conflict in Postgres, so orders without a number are fine.
+  @@unique([invoiceRestaurantId, invoiceNo])
   @@index([branchId, status])
   @@index([branchId, deliveryStatus])
   @@map("orders")
@@ -2442,6 +2459,29 @@ model SubscriptionInvoice {
 
   @@index([restaurantId, issuedAt])
   @@map("subscription_invoices")
+}
+
+// India sales invoice series: one consecutive counter per (restaurant,
+// prefix, financial year). Unique per restaurant so two branches using the
+// same prefix share one series and can never issue the same number.
+// deviceId is reserved for per-device series (offline billing, later).
+model InvoiceSeries {
+  id            String     @id @default(cuid())
+  restaurantId  String
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  branchId      String
+  branch        Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  prefix        String
+  financialYear String // "2026-27"
+  fyShort       String // "2627"
+  lastNumber    Int        @default(0)
+  deviceId      String?
+  createdAt     DateTime   @default(now())
+  orders        Order[]
+
+  @@unique([restaurantId, prefix, financialYear])
+  @@index([branchId, financialYear])
+  @@map("invoice_series")
 }
 
 model InvoiceCounter {

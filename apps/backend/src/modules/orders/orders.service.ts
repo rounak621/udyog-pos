@@ -28,6 +28,7 @@ import { InventoryService } from '../inventory/inventory.service';
 import { MarketingService } from '../marketing/marketing.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { resolveProfile } from './escpos/encoder';
+import { allocateInvoiceNumber } from './invoice-number';
 import { nextOrderNumber } from './order-number';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RealtimeGateway } from '../../realtime/realtime.gateway';
@@ -759,6 +760,16 @@ export class OrdersService {
         `Only finished transactions can be deleted — ${live
           .map((o) => `#${o.orderNumber}`)
           .join(', ')} still in progress`,
+      );
+    }
+
+    // India: an issued sales invoice number is never deleted or reused.
+    const numbered = orders.filter((o) => o.invoiceNo);
+    if (numbered.length > 0) {
+      throw new BadRequestException(
+        `Sales with an invoice number cannot be deleted (${numbered
+          .map((o) => o.invoiceNo)
+          .join(', ')}). Refund the sale instead.`,
       );
     }
 
@@ -1728,11 +1739,25 @@ export class OrdersService {
         // commit time; Prisma throws P2025 (caught below) for the loser, and
         // the whole transaction — including the gift card debit and loyalty
         // changes already applied above — rolls back with it.
+        // India: the sales invoice number is issued here, once, in this
+        // same transaction as OPEN->PAID (invoice-number.ts). Partial
+        // payments returned above get none; a replayed checkout never gets
+        // here; an order that already has a number never gets a second.
+        const invoice =
+          branch.taxRegime === 'INDIA_GST' && !order.invoiceNo
+            ? await allocateInvoiceNumber(tx, {
+                restaurantId: branch.restaurantId,
+                branchId,
+                prefix: branch.invoicePrefix,
+              })
+            : null;
+
         await tx.order.update({
           where: { id: orderId, status: 'OPEN' },
           data: {
             ...lockedFigures,
             ...gstInvoice,
+            ...(invoice ?? {}),
             status: 'PAID',
             billedAt: new Date(),
             payments: { create: paymentRows },

@@ -15,6 +15,7 @@ import {
   TAX_REGIME_PRESETS,
   gstinStateCode,
   indiaStateName,
+  istDisplayDate,
   splitIndiaGst,
   type TaxMode,
   type TaxRegime,
@@ -84,6 +85,9 @@ export interface EscposReceiptOrder {
   /** India GST invoice: buyer GSTIN and place of supply (state code). */
   customerGstin?: string | null;
   placeOfSupplyStateCode?: string | null;
+  /** India sales invoice number, set once the order is fully paid. */
+  invoiceNo?: string | null;
+  invoiceIssuedAt?: Date | null;
   items: {
     nameSnapshot: string;
     quantity: number;
@@ -167,6 +171,14 @@ export function buildReceiptEscPosJob({
   w.rule();
   w.text(stamp(order.createdAt, { timeZone, locale }));
   w.text(`Order: #${order.orderNumber} - ${order.type.replace('_', ' ')}`);
+  if (order.invoiceNo) {
+    w.text(`Invoice No: ${order.invoiceNo}`);
+    if (order.invoiceIssuedAt) {
+      w.text(
+        `Invoice date: ${istDisplayDate(new Date(order.invoiceIssuedAt))}`,
+      );
+    }
+  }
   if (order.table) w.text(`Table: ${order.table.label}`);
   if (order.customer) {
     w.text(

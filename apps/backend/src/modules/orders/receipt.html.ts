@@ -21,6 +21,7 @@ import {
   TAX_REGIME_PRESETS,
   gstinStateCode,
   indiaStateName,
+  istDisplayDate,
   splitIndiaGst,
   type TaxMode,
   type TaxRegime,
@@ -68,6 +69,9 @@ interface ReceiptOrder {
   /** India GST invoice: buyer GSTIN and place of supply (state code). */
   customerGstin?: string | null;
   placeOfSupplyStateCode?: string | null;
+  /** India sales invoice number, set once the order is fully paid. */
+  invoiceNo?: string | null;
+  invoiceIssuedAt?: Date | null;
   items: {
     nameSnapshot: string;
     quantity: number;
@@ -267,6 +271,8 @@ export function buildReceiptHtml({
     <p class="muted">
       ${esc(dateStr)}<br>
       Order: #${esc(order.orderNumber)} · ${esc(order.type.replace('_', ' '))}
+      ${order.invoiceNo ? `<br>Invoice No: ${esc(order.invoiceNo)}` : ''}
+      ${order.invoiceNo && order.invoiceIssuedAt ? `<br>Invoice date: ${esc(istDisplayDate(new Date(order.invoiceIssuedAt)))}` : ''}
       ${order.table ? `<br>Table: ${esc(order.table.label)}` : ''}
       ${order.customer ? `<br>Guest: ${esc(order.customer.name)}${order.customer.phone ? ` · ${esc(order.customer.phone)}` : ''}` : ''}
       ${isIndia && order.customerGstin ? `<br>Customer GSTIN: ${esc(order.customerGstin)}` : ''}

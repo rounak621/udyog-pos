@@ -46,6 +46,15 @@ export const branchSettingsSchema = z.object({
   defaultHsnSac: hsnSacSchema,
   // India: FSSAI licence number printed on bills (14 digits, empty allowed).
   fssaiNumber: fssaiSchema,
+  // India: prefix of the sales invoice series (1-4 letters/digits, empty =
+  // default "INV"). A new prefix starts a new series from 000001.
+  invoicePrefix: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .refine((v) => v === "" || /^[A-Z0-9]{1,4}$/.test(v), "Use 1 to 4 letters or numbers")
+    .nullable()
+    .optional(),
   // Online order / table-booking handling (false = staff accept manually).
   autoConfirmOrders: z.boolean().optional(),
   autoConfirmReservations: z.boolean().optional(),

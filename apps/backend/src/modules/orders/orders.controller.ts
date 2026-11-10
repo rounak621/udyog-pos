@@ -165,6 +165,8 @@ function toEscposOrder(
     totalAmount: Number(order.totalAmount),
     customerGstin: order.customerGstin,
     placeOfSupplyStateCode: order.placeOfSupplyStateCode,
+    invoiceNo: order.invoiceNo,
+    invoiceIssuedAt: order.invoiceIssuedAt,
     ...overrides,
     items: order.items.map((item) => ({
       nameSnapshot: item.nameSnapshot,

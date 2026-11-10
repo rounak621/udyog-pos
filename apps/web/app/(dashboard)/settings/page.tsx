@@ -196,6 +196,7 @@ function GeneralSettingsForm({
   const [taxId, setTaxId] = useState(branch.taxId ?? "");
   const [defaultHsnSac, setDefaultHsnSac] = useState(branch.defaultHsnSac ?? "");
   const [fssaiNumber, setFssaiNumber] = useState(branch.fssaiNumber ?? "");
+  const [invoicePrefix, setInvoicePrefix] = useState(branch.invoicePrefix ?? "");
 
   const preset = TAX_REGIME_PRESETS[taxRegime];
 
@@ -237,7 +238,11 @@ function GeneralSettingsForm({
         taxLabel: taxLabel || null,
         taxId: taxId || null,
         ...(taxRegime === "INDIA_GST"
-          ? { defaultHsnSac: defaultHsnSac || null, fssaiNumber: fssaiNumber || null }
+          ? {
+              defaultHsnSac: defaultHsnSac || null,
+              fssaiNumber: fssaiNumber || null,
+              invoicePrefix: invoicePrefix || null,
+            }
           : {}),
       },
       {
@@ -525,6 +530,20 @@ function GeneralSettingsForm({
                 placeholder="14 digits"
               />
               <p className="text-xs text-muted-foreground">Printed on bills and the QR menu when set.</p>
+            </div>
+          )}
+          {taxRegime === "INDIA_GST" && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="b-invoice-prefix">Invoice prefix</Label>
+              <Input
+                id="b-invoice-prefix"
+                maxLength={4}
+                autoComplete="off"
+                value={invoicePrefix}
+                onChange={(e) => setInvoicePrefix(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+                placeholder="INV"
+              />
+              <p className="text-xs text-muted-foreground">Changing the prefix starts a new numbering series.</p>
             </div>
           )}
           <div className="flex flex-col gap-2">
