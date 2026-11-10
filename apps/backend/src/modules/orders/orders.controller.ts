@@ -18,6 +18,7 @@ import {
   billPreviewSchema,
   checkoutSchema,
   createOrderSchema,
+  type CreateOrderDto,
   cancelOrderSchema,
   deleteOrdersSchema,
   mergeOrdersSchema,
@@ -259,7 +260,10 @@ export class OrdersController {
     @Body() body: unknown,
   ) {
     await this.branchAccess.assertAccess(user.restaurantId, branchId);
-    return this.ordersService.createOrder(branchId, user.id, body as never);
+    const dto = body as CreateOrderDto;
+    return this.ordersService.createOrder(branchId, user.id, dto, {
+      clientRequestId: dto.clientRequestId,
+    });
   }
 
   @Auth('orders.edit')
@@ -547,7 +551,9 @@ export class OrdersController {
       profile = await this.ordersService.printerProfile(branchId);
     }
     const buffer =
-      kind === 'kot' ? buildKotTestSlip(profile).buffer : buildTestSlip(profile);
+      kind === 'kot'
+        ? buildKotTestSlip(profile).buffer
+        : buildTestSlip(profile);
     return escposPayload(buffer, profile);
   }
 

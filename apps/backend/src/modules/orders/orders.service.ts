@@ -160,7 +160,9 @@ export class OrdersService {
   }
 
   // India GST: the code printed for an item without its own HSN/SAC.
-  private async getBranchDefaultHsnSac(branchId: string): Promise<string | null> {
+  private async getBranchDefaultHsnSac(
+    branchId: string,
+  ): Promise<string | null> {
     const branch = await this.prisma.branch.findUnique({
       where: { id: branchId },
       select: { defaultHsnSac: true },
@@ -178,6 +180,17 @@ export class OrdersService {
       clientRequestId?: string;
     } = {},
   ) {
+    // Idempotent create: the same clientRequestId (per branch) always means
+    // the same order. A repeat gets that order back, in the same shape as a
+    // fresh create, and nothing is created, printed or announced again.
+    if (options.clientRequestId) {
+      const existing = await this.findByClientRequestId(
+        branchId,
+        options.clientRequestId,
+      );
+      if (existing) return this.getOrder(branchId, existing.id);
+    }
+
     const channel = options.channel ?? 'STAFF';
     // Online orders wait for a staff member to accept them unless this
     // branch is set to auto-confirm (Settings > Online orders).
@@ -321,79 +334,98 @@ export class OrdersService {
       }
     }
 
-    const order = await this.prisma.$transaction(async (tx) => {
-      // Inside the transaction, under a per-branch/day lock (order-number.ts).
-      const orderNumber = await nextOrderNumber(tx, branchId);
-      const created = await tx.order.create({
-        data: {
-          branchId,
-          orderNumber,
-          type: dto.type,
-          channel,
-          acceptance,
-          tableId: dto.tableId,
-          guestCount: dto.guestCount,
-          customerId: dto.customerId,
-          guestName: dto.guestName,
-          notes: dto.notes,
-          clientRequestId: options.clientRequestId,
-          createdById: userId,
-          subtotal: totals.subtotal,
-          taxAmount: totals.taxAmount,
-          discountAmount: 0,
-          totalAmount: totals.subtotal,
-          scheduledFor,
-          ...(delivery
-            ? {
-                deliveryZoneId: delivery.deliveryZoneId,
-                deliveryFee: delivery.deliveryFee,
-                deliveryAddress: delivery.deliveryAddress,
-                deliveryPincode: delivery.deliveryPincode,
-                deliveryPhone: delivery.deliveryPhone,
-                deliveryStatus: delivery.deliveryStatus,
-                deliveryEtaAt: delivery.deliveryEtaAt,
-              }
-            : {}),
-          items: {
-            create: lineInputs.map((line) => ({
-              menuItem: { connect: { id: line.menuItem.id } },
-              nameSnapshot: line.menuItem.name,
-              unitPriceSnapshot: line.menuItem.price,
-              taxRateSnapshot: line.menuItem.taxRatePercent,
-              hsnSacSnapshot: line.menuItem.hsnSac || defaultHsnSac,
-              quantity: line.cartItem.quantity,
-              lineTotal: line.priced.lineTotal,
-              kitchenNote: line.cartItem.kitchenNote,
-              modifiers: {
-                create: line.selectedModifiers.map((m) => ({
-                  modifier: { connect: { id: m.id } },
-                  nameSnapshot: m.name,
-                  priceAdjSnapshot: m.priceAdjustment,
-                })),
-              },
-            })),
+    let order: { id: string };
+    try {
+      order = await this.prisma.$transaction(async (tx) => {
+        // Inside the transaction, under a per-branch/day lock (order-number.ts).
+        const orderNumber = await nextOrderNumber(tx, branchId);
+        const created = await tx.order.create({
+          data: {
+            branchId,
+            orderNumber,
+            type: dto.type,
+            channel,
+            acceptance,
+            tableId: dto.tableId,
+            guestCount: dto.guestCount,
+            customerId: dto.customerId,
+            guestName: dto.guestName,
+            notes: dto.notes,
+            clientRequestId: options.clientRequestId,
+            createdById: userId,
+            subtotal: totals.subtotal,
+            taxAmount: totals.taxAmount,
+            discountAmount: 0,
+            totalAmount: totals.subtotal,
+            scheduledFor,
+            ...(delivery
+              ? {
+                  deliveryZoneId: delivery.deliveryZoneId,
+                  deliveryFee: delivery.deliveryFee,
+                  deliveryAddress: delivery.deliveryAddress,
+                  deliveryPincode: delivery.deliveryPincode,
+                  deliveryPhone: delivery.deliveryPhone,
+                  deliveryStatus: delivery.deliveryStatus,
+                  deliveryEtaAt: delivery.deliveryEtaAt,
+                }
+              : {}),
+            items: {
+              create: lineInputs.map((line) => ({
+                menuItem: { connect: { id: line.menuItem.id } },
+                nameSnapshot: line.menuItem.name,
+                unitPriceSnapshot: line.menuItem.price,
+                taxRateSnapshot: line.menuItem.taxRatePercent,
+                hsnSacSnapshot: line.menuItem.hsnSac || defaultHsnSac,
+                quantity: line.cartItem.quantity,
+                lineTotal: line.priced.lineTotal,
+                kitchenNote: line.cartItem.kitchenNote,
+                modifiers: {
+                  create: line.selectedModifiers.map((m) => ({
+                    modifier: { connect: { id: m.id } },
+                    nameSnapshot: m.name,
+                    priceAdjSnapshot: m.priceAdjustment,
+                  })),
+                },
+              })),
+            },
           },
-        },
-        include: { items: true },
-      });
-
-      if (dto.tableId) {
-        await tx.table.update({
-          where: { id: dto.tableId },
-          data: { status: 'OCCUPIED', statusSince: new Date() },
+          include: { items: true },
         });
-      }
 
-      // A pending online order must not reach the kitchen until accepted
-      // (acceptOrder() generates the tickets then).
-      // A scheduled order also waits: releaseDueScheduledOrders() sends it to
-      // the kitchen shortly before its time.
-      if (acceptance !== 'PENDING' && !this.isDeferred(scheduledFor)) {
-        await this.generateKots(tx, created.id, branchId, created.items);
-      }
+        if (dto.tableId) {
+          await tx.table.update({
+            where: { id: dto.tableId },
+            data: { status: 'OCCUPIED', statusSince: new Date() },
+          });
+        }
 
-      return created;
-    });
+        // A pending online order must not reach the kitchen until accepted
+        // (acceptOrder() generates the tickets then).
+        // A scheduled order also waits: releaseDueScheduledOrders() sends it to
+        // the kitchen shortly before its time.
+        if (acceptance !== 'PENDING' && !this.isDeferred(scheduledFor)) {
+          await this.generateKots(tx, created.id, branchId, created.items);
+        }
+
+        return created;
+      });
+    } catch (err) {
+      // Two requests with the same clientRequestId at the same moment: the
+      // loser hits the unique (branchId, clientRequestId) index and gets the
+      // winner's order back.
+      if (
+        options.clientRequestId &&
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        const existing = await this.findByClientRequestId(
+          branchId,
+          options.clientRequestId,
+        );
+        if (existing) return this.getOrder(branchId, existing.id);
+      }
+      throw err;
+    }
 
     // `acceptance` rides along so a kitchen screen can sound the alert for an
     // order that is waiting on a yes/no (it has no ticket to announce yet).
@@ -450,6 +482,13 @@ export class OrdersService {
     });
 
     return full;
+  }
+
+  private findByClientRequestId(branchId: string, clientRequestId: string) {
+    return this.prisma.order.findFirst({
+      where: { branchId, clientRequestId },
+      select: { id: true },
+    });
   }
 
   async addItems(
@@ -1481,7 +1520,8 @@ export class OrdersService {
     // figures are locked). A GSTIN without a place of supply implies its state.
     const gstInvoice =
       branch.taxRegime === 'INDIA_GST' &&
-      (dto.customerGstin !== undefined || dto.placeOfSupplyStateCode !== undefined)
+      (dto.customerGstin !== undefined ||
+        dto.placeOfSupplyStateCode !== undefined)
         ? {
             customerGstin: dto.customerGstin || null,
             placeOfSupplyStateCode:

@@ -101,6 +101,9 @@ export const createOrderSchema = z.object({
   // Scheduled order: ISO time in the future; the kitchen starts then.
   scheduledFor: z.string().datetime().optional(),
   items: z.array(cartItemSchema).min(1),
+  // Idempotency key: one per order attempt, kept for retries of the same
+  // attempt. A repeat returns the order already created instead of a second one.
+  clientRequestId: z.string().uuid().max(64).optional(),
 });
 export type CreateOrderDto = z.infer<typeof createOrderSchema>;
 

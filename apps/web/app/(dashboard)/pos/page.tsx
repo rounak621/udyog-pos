@@ -2,7 +2,7 @@
 
 import { ChevronLeft, MonitorSmartphone, ShoppingCart } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { StatusNote, useNoteToast } from "@/components/ui/status-note";
 import { publishDisplay } from "@/lib/customer-display";
 import { BranchNotice } from "@/components/layout/branch-notice";
@@ -93,6 +93,21 @@ function PosPageInner() {
   }, [lines, activeOrder]);
 
   const createOrder = useCreateOrder(branchId);
+  // One clientRequestId per new-order attempt: a retry of the same cart
+  // (e.g. after a dropped connection) reuses it, so the server returns the
+  // order it already made instead of a second one. A new id after success
+  // or once the cart is cleared.
+  const orderAttempt = useRef<{ key: string; id: string } | null>(null);
+  const clientRequestIdFor = (payload: unknown) => {
+    const key = JSON.stringify(payload);
+    if (orderAttempt.current?.key !== key) {
+      orderAttempt.current = { key, id: crypto.randomUUID() };
+    }
+    return orderAttempt.current.id;
+  };
+  useEffect(() => {
+    if (lines.length === 0) orderAttempt.current = null;
+  }, [lines.length]);
   const addOrderItems = useAddOrderItems(branchId);
   const openBillsQuery = useOpenOrdersForTable(
     branchId,
@@ -196,18 +211,20 @@ function PosPageInner() {
       return;
     }
 
+    const payload = {
+      type: orderType,
+      tableId: orderType === "DINE_IN" ? tableId : undefined,
+      ...(orderType === "DELIVERY" ? { delivery } : {}),
+      ...(orderType !== "DINE_IN" && scheduledFor
+        ? { scheduledFor: new Date(scheduledFor).toISOString() }
+        : {}),
+      items,
+    };
     createOrder.mutate(
-      {
-        type: orderType,
-        tableId: orderType === "DINE_IN" ? tableId : undefined,
-        ...(orderType === "DELIVERY" ? { delivery } : {}),
-        ...(orderType !== "DINE_IN" && scheduledFor
-          ? { scheduledFor: new Date(scheduledFor).toISOString() }
-          : {}),
-        items,
-      },
+      { ...payload, clientRequestId: clientRequestIdFor(payload) },
       {
         onSuccess: (order) => {
+          orderAttempt.current = null;
           setDrafts((d) => clearDraft(d, sentTableId));
           setActiveCustomer(null);
           setActiveOrder(order);
