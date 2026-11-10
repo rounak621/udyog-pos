@@ -85,6 +85,19 @@ internal sealed class ServerSettingsForm : Form
         };
         _autoStartBox.CheckedChanged += async (_, _) => await ToggleAutoStartAsync();
 
+        var printersLink = new LinkLabel
+        {
+            Text = "Printers on this PC… (Ctrl+Shift+P)",
+            AutoSize = true,
+            Location = new Point(20, 224),
+            Font = new Font("Segoe UI", 8.5f),
+        };
+        printersLink.LinkClicked += (_, _) =>
+        {
+            using var printerForm = new PrinterSettingsForm();
+            printerForm.ShowDialog(this);
+        };
+
         _saveButton = new Button
         {
             Text = "Save",
@@ -118,7 +131,7 @@ internal sealed class ServerSettingsForm : Form
         Controls.AddRange(new Control[]
         {
             titleLabel, helpLabel, _urlBox, _statusLabel, _skipTestLink,
-            _autoStartBox, _saveButton, cancelButton, versionLabel,
+            _autoStartBox, printersLink, _saveButton, cancelButton, versionLabel,
         });
 
         Shown += async (_, _) =>

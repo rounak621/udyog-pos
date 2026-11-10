@@ -36,6 +36,7 @@ internal sealed class ShellWindow : Form
     private readonly NoticeBar _notice = new();
     private readonly MenuStrip? _menu;
     private readonly RegisteredWaitHandle? _activateWaitHandle;
+    private readonly NativeBridge _bridge;
 
     private bool _fullScreen;
     private bool _restoreFullScreen;
@@ -54,6 +55,7 @@ internal sealed class ShellWindow : Form
         _config = config;
         _isMain = isMain;
         _placementKey = placementKey;
+        _bridge = new NativeBridge(IsAppOrigin);
 
         Text = "UDYOG POS";
         Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Application;
@@ -120,9 +122,12 @@ internal sealed class ShellWindow : Form
         var fileMenu = new ToolStripMenuItem("File");
         var settings = new ToolStripMenuItem("Settings…") { ShortcutKeyDisplayString = "Ctrl+Shift+S" };
         settings.Click += async (_, _) => await OpenSettingsAsync();
+        var printers = new ToolStripMenuItem("Printers…") { ShortcutKeyDisplayString = "Ctrl+Shift+P" };
+        printers.Click += (_, _) => OpenPrinterSettings();
         var exit = new ToolStripMenuItem("Exit");
         exit.Click += (_, _) => Close();
         fileMenu.DropDownItems.Add(settings);
+        fileMenu.DropDownItems.Add(printers);
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
         fileMenu.DropDownItems.Add(exit);
 
@@ -367,8 +372,14 @@ internal sealed class ShellWindow : Form
 
     private void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
     {
-        // Only the local offline page talks to the shell, and only to say "retry".
-        if (!_offlinePageShown) return;
+        // App pages talk to the print bridge (it checks the origin itself).
+        if (!_offlinePageShown)
+        {
+            _ = _bridge.HandleAsync(_webView.CoreWebView2, e);
+            return;
+        }
+
+        // The local offline page only ever says "retry".
         string? message;
         try { message = e.TryGetWebMessageAsString(); }
         catch { return; }
@@ -472,6 +483,9 @@ internal sealed class ShellWindow : Form
             case Keys.Control | Keys.NumPad0:
                 _webView.ZoomFactor = 1.0;
                 return true;
+            case Keys.Control | Keys.Shift | Keys.P:
+                BeginInvoke((Action)OpenPrinterSettings);
+                return true;
             case Keys.Control | Keys.Shift | Keys.S when _isMain:
                 // Not inside the WebView2 key callback: open the modal form afterwards.
                 BeginInvoke((Action)(() => _ = OpenSettingsAsync()));
@@ -565,6 +579,12 @@ internal sealed class ShellWindow : Form
         }
         await Task.CompletedTask;
         return true;
+    }
+
+    private void OpenPrinterSettings()
+    {
+        using var dialog = new PrinterSettingsForm();
+        dialog.ShowDialog(this);
     }
 
     private void ShowMessage(string message)
