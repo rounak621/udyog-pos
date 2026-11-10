@@ -220,9 +220,15 @@ export class OrdersController {
     @CurrentUser() user: SessionUser,
     @Query('branchId') branchId: string,
     @Query('tableId') tableId?: string,
+    @Query('mine') mine?: string,
   ) {
     await this.branchAccess.assertAccess(user.restaurantId, branchId);
-    return this.ordersService.listOpen(branchId, tableId);
+    // mine=true: only open orders this user created (app "my orders").
+    return this.ordersService.listOpen(
+      branchId,
+      tableId,
+      mine === 'true' ? user.id : undefined,
+    );
   }
 
   @Auth('orders.create')

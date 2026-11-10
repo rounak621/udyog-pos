@@ -52,3 +52,36 @@ export const appSessionInfoSchema = z.object({
   current: z.boolean(),
 });
 export type AppSessionInfo = z.infer<typeof appSessionInfoSchema>;
+
+/**
+ * GET /branches/current-config?branchId= : read-only branch settings an app
+ * needs (any signed-in user of that branch). No kiosk token, no printer
+ * address. `india` is set only for INDIA_GST branches.
+ */
+export const branchConfigSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  address: z.string().nullable(),
+  phone: z.string().nullable(),
+  country: z.string(),
+  taxRegime: z.string(),
+  taxMode: z.string(),
+  taxLabel: z.string().nullable(),
+  restaurantName: z.string(),
+  logoUrl: z.string().nullable(),
+  currency: z.string(),
+  timezone: z.string(),
+  upiVpa: z.string().nullable(),
+  upiPayeeName: z.string().nullable(),
+  india: z
+    .object({
+      gstin: z.string().nullable(),
+      /** First two digits of the GSTIN (decides CGST/SGST vs IGST). */
+      stateCode: z.string().nullable(),
+      fssaiNumber: z.string().nullable(),
+      defaultHsnSac: z.string().nullable(),
+      invoicePrefix: z.string().nullable(),
+    })
+    .nullable(),
+});
+export type BranchConfig = z.infer<typeof branchConfigSchema>;

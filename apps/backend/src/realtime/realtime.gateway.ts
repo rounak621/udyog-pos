@@ -13,6 +13,7 @@ import {
   isRestaurantAllowed,
 } from '../common/restaurant-access';
 import { PrismaService } from '../prisma/prisma.service';
+import { assertAppSessionActive } from '../auth/app-sessions.service';
 
 // One gateway, room-per-branch — KDS/table-status/order-tracking all join
 // the branch room they care about and get pushed events by name
@@ -59,15 +60,22 @@ export class RealtimeGateway
   // fails either check is disconnected before joining any room.
   async handleConnection(client: Socket) {
     try {
-      const token = this.extractSessionCookie(client);
-      if (!token) throw new Error('No session cookie');
+      // Web: the session cookie. Apps: the access token in
+      // io(url, { auth: { token } }) -> handshake.auth.token.
+      const token =
+        this.extractSessionCookie(client) ?? this.extractAuthToken(client);
+      if (!token) throw new Error('No session cookie or token');
 
-      const payload = this.jwt.verify<{ sub: string }>(token);
+      const payload = this.jwt.verify<{ sub: string; sid?: string }>(token);
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
         include: { restaurant: { select: RESTAURANT_ACCESS_SELECT } },
       });
       if (!user || !user.isActive) throw new Error('Session no longer valid');
+      // App tokens: same revocation rule as REST (JwtStrategy).
+      if (payload.sid) {
+        await assertAppSessionActive(this.prisma, payload.sid, user.id);
+      }
       if (!user.isPlatformAdmin && !isRestaurantAllowed(user.restaurant))
         throw new Error('Restaurant is locked');
 
@@ -119,6 +127,12 @@ export class RealtimeGateway
 
   private userRoom(userId: string) {
     return `user:${userId}`;
+  }
+
+  private extractAuthToken(client: Socket): string | null {
+    const auth = client.handshake.auth as { token?: unknown } | undefined;
+    const token = auth?.token;
+    return typeof token === 'string' && token.length > 0 ? token : null;
   }
 
   private extractSessionCookie(client: Socket): string | null {

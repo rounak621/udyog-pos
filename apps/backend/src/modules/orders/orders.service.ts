@@ -71,9 +71,14 @@ export class OrdersService {
     private readonly verifactu: VerifactuService,
   ) {}
 
-  async listOpen(branchId: string, tableId?: string) {
+  async listOpen(branchId: string, tableId?: string, createdById?: string) {
     return this.prisma.order.findMany({
-      where: { branchId, status: 'OPEN', ...(tableId ? { tableId } : {}) },
+      where: {
+        branchId,
+        status: 'OPEN',
+        ...(tableId ? { tableId } : {}),
+        ...(createdById ? { createdById } : {}),
+      },
       include: { table: true, items: true, customer: true },
       orderBy: { createdAt: 'desc' },
     });

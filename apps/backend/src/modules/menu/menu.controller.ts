@@ -236,7 +236,8 @@ export class MenuController {
 
   // --- Combo meals -----------------------------------------------------------
 
-  @Auth('menu.manage')
+  // Read only: anyone who can see the menu (waiters, apps) may read a combo.
+  @Auth('menu.view')
   @Get('items/:id/combo-components')
   async getComboComponents(
     @CurrentUser() user: SessionUser,
