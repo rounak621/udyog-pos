@@ -6,9 +6,24 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RealtimeGateway } from '../../realtime/realtime.gateway';
-import { buildKotEscPosJob, resolveProfile } from './escpos-receipt';
+import {
+  buildKotEscPosJob,
+  resolveProfile,
+  type PrintResult,
+} from './escpos-receipt';
 import { PrinterNotFoundError } from './escpos-usb';
 import { sendToBranchPrinter } from './printer-transport';
+
+type LoadedKot = Awaited<ReturnType<KotPrintService['load']>>[number];
+
+/** One kitchen ticket as ESC/POS bytes, for the desktop app to print. */
+export interface KotEscposTicket {
+  kotId: string;
+  ticketNumber: string;
+  stationId: string | null;
+  stationName: string | null;
+  job: PrintResult;
+}
 
 export interface KotPrintResult {
   ok: true;
@@ -78,6 +93,82 @@ export class KotPrintService {
     return this.run(branchId, kots, reprint);
   }
 
+  /**
+   * Bytes only (nothing is sent, nothing is marked printed): every
+   * non-cancelled ticket of the order, optionally only one station or one
+   * ticket. 404 for an order outside the branch, like the other routes.
+   */
+  async escposForOrder(
+    branchId: string,
+    orderId: string,
+    filter: { stationId?: string; kotId?: string } = {},
+  ): Promise<KotEscposTicket[]> {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, branchId },
+      select: { id: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    const kots = (await this.load(branchId, { orderId })).filter(
+      (k) =>
+        (!filter.stationId || k.stationId === filter.stationId) &&
+        (!filter.kotId || k.id === filter.kotId),
+    );
+    if (kots.length === 0) {
+      throw new ConflictException({
+        code: 'NO_TICKETS',
+        message: 'This order has no kitchen tickets to print',
+      });
+    }
+    return kots.map((kot) => ({
+      kotId: kot.id,
+      ticketNumber: kot.ticketNumber,
+      stationId: kot.stationId,
+      stationName: kot.station?.name ?? null,
+      job: this.buildJob(kot, 0),
+    }));
+  }
+
+  private buildJob(kot: LoadedKot, copy: number): PrintResult {
+    const branch = kot.order.branch;
+    return buildKotEscPosJob({
+      branchName: branch.name,
+      profile: resolveProfile({
+        paperWidthMm: branch.printerPaperWidthMm,
+        codepage: branch.printerCodepage,
+        columns: branch.printerColumns,
+      }),
+      ticket: {
+        number: kot.ticketNumber,
+        station: kot.station?.name ?? null,
+        reprint: copy,
+      },
+      order: {
+        orderNumber: kot.order.orderNumber,
+        type: kot.order.type,
+        createdAt: kot.order.createdAt,
+        table: kot.order.table
+          ? {
+              label: kot.order.table.name ?? `#${kot.order.table.number}`,
+            }
+          : null,
+        customer: kot.order.customer
+          ? { name: kot.order.customer.name ?? 'Guest' }
+          : kot.order.guestName
+            ? { name: kot.order.guestName }
+            : null,
+        notes: kot.order.notes,
+        items: kot.items.map(({ orderItem }) => ({
+          nameSnapshot: orderItem.nameSnapshot,
+          quantity: orderItem.quantity,
+          kitchenNote: orderItem.kitchenNote,
+          modifiers: orderItem.modifiers.map((m) => ({
+            nameSnapshot: m.nameSnapshot,
+          })),
+        })),
+      },
+    });
+  }
+
   private async run(
     branchId: string,
     kots: Awaited<ReturnType<KotPrintService['load']>>,
@@ -108,43 +199,7 @@ export class KotPrintService {
 
       const branch = kot.order.branch;
       const copy = reprint ? kot.printedCount : 0; // REPRINT #n on paper
-      const job = buildKotEscPosJob({
-        branchName: branch.name,
-        profile: resolveProfile({
-          paperWidthMm: branch.printerPaperWidthMm,
-          codepage: branch.printerCodepage,
-          columns: branch.printerColumns,
-        }),
-        ticket: {
-          number: kot.ticketNumber,
-          station: kot.station?.name ?? null,
-          reprint: copy,
-        },
-        order: {
-          orderNumber: kot.order.orderNumber,
-          type: kot.order.type,
-          createdAt: kot.order.createdAt,
-          table: kot.order.table
-            ? {
-                label: kot.order.table.name ?? `#${kot.order.table.number}`,
-              }
-            : null,
-          customer: kot.order.customer
-            ? { name: kot.order.customer.name ?? 'Guest' }
-            : kot.order.guestName
-              ? { name: kot.order.guestName }
-              : null,
-          notes: kot.order.notes,
-          items: kot.items.map(({ orderItem }) => ({
-            nameSnapshot: orderItem.nameSnapshot,
-            quantity: orderItem.quantity,
-            kitchenNote: orderItem.kitchenNote,
-            modifiers: orderItem.modifiers.map((m) => ({
-              nameSnapshot: m.nameSnapshot,
-            })),
-          })),
-        },
-      });
+      const job = this.buildJob(kot, copy);
 
       try {
         await sendToBranchPrinter(branch, job.buffer);

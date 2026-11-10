@@ -1,3 +1,4 @@
+import { isServerPrintEnabled } from '../common/config/server-print';
 import {
   Body,
   Controller,
@@ -165,7 +166,14 @@ export class AuthController {
       user.restaurantId,
     );
     // Online payment is available (Razorpay keys set): shows "Choose a plan".
-    return { user, restaurant, billingEnabled: razorpayKeys() !== null };
+    // serverPrintEnabled: the server prints over USB/9100 itself
+    // (ALLOW_SERVER_PRINT=true); otherwise the desktop app prints.
+    return {
+      user,
+      restaurant,
+      billingEnabled: razorpayKeys() !== null,
+      serverPrintEnabled: isServerPrintEnabled(),
+    };
   }
 
   // Public and unauthenticated — the marketing/login page needs this before

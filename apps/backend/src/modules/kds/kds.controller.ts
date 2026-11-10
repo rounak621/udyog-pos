@@ -16,6 +16,7 @@ import {
   setPrioritySchema,
   type SessionUser,
 } from '@nodedr-restaurant/types';
+import { assertServerPrintEnabled } from '../../common/config/server-print';
 import { Auth } from '../../common/decorators/auth.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
@@ -171,6 +172,7 @@ export class KdsController {
     @Query('branchId') branchId: string,
     @Param('id') id: string,
   ) {
+    assertServerPrintEnabled();
     await this.branchAccess.assertAccess(user.restaurantId, branchId);
     return this.kdsService.print(branchId, id, false);
   }
@@ -183,6 +185,7 @@ export class KdsController {
     @Query('branchId') branchId: string,
     @Param('id') id: string,
   ) {
+    assertServerPrintEnabled();
     await this.branchAccess.assertAccess(user.restaurantId, branchId);
     return this.kdsService.print(branchId, id, true);
   }

@@ -2270,6 +2270,7 @@ export class OrdersService {
       this.realtime.emitToBranch(branchId, 'kot.created', {
         id: kot.id,
         stationId,
+        orderId,
       });
     }
   }

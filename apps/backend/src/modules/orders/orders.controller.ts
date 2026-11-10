@@ -34,6 +34,7 @@ import {
   type UpdateOrderItemDto,
   type SessionUser,
 } from '@nodedr-restaurant/types';
+import { assertServerPrintEnabled } from '../../common/config/server-print';
 import { Auth } from '../../common/decorators/auth.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
@@ -65,6 +66,21 @@ import { buildReceiptHtml } from './receipt.html';
 import { VerifactuService } from '../verifactu/verifactu.service';
 
 type ReceiptData = Awaited<ReturnType<OrdersService['getReceiptData']>>;
+
+const ESCPOS_CONTENT_TYPE = 'application/vnd.escpos';
+
+/** JSON shape of the byte-only routes the desktop app prints from. */
+function escposPayload(
+  buffer: Buffer,
+  profile: { paperWidthMm: number; codepage: string },
+) {
+  return {
+    data: buffer.toString('base64'),
+    contentType: ESCPOS_CONTENT_TYPE,
+    paperWidth: profile.paperWidthMm,
+    codepage: profile.codepage,
+  };
+}
 
 function branchPrinterProfile(branch: {
   printerPaperWidthMm: number;
@@ -497,7 +513,106 @@ export class OrdersController {
     res.type('html').send(html);
   }
 
+  // --- ESC/POS bytes for the desktop app --------------------------------------
+  // Byte-only: nothing is sent to a printer from the server. The UDYOG POS
+  // Windows app prints these on the PC's own printer. Not gated by
+  // ALLOW_SERVER_PRINT. Static paths come first so they are never read as :id.
+
+  // Drawer pulse only ("No sale").
+  @Auth('bills.print')
+  @Get('print/drawer/escpos')
+  async drawerEscpos(
+    @CurrentUser() user: SessionUser,
+    @Query('branchId') branchId?: string,
+  ) {
+    let profile = resolveProfile();
+    if (branchId) {
+      await this.branchAccess.assertAccess(user.restaurantId, branchId);
+      profile = await this.ordersService.printerProfile(branchId);
+    }
+    return escposPayload(buildOpenDrawer(), profile);
+  }
+
+  // Test slip (kind=kot: sample kitchen ticket), same builders as print/test.
+  @Auth('bills.print')
+  @Get('print/test/escpos')
+  async testEscpos(
+    @CurrentUser() user: SessionUser,
+    @Query('branchId') branchId?: string,
+    @Query('kind') kind?: string,
+  ) {
+    let profile = resolveProfile();
+    if (branchId) {
+      await this.branchAccess.assertAccess(user.restaurantId, branchId);
+      profile = await this.ordersService.printerProfile(branchId);
+    }
+    const buffer =
+      kind === 'kot' ? buildKotTestSlip(profile).buffer : buildTestSlip(profile);
+    return escposPayload(buffer, profile);
+  }
+
+  // Bill/receipt bytes; drawer=true appends the drawer pulse (never on a
+  // provisional bill, same rule as print/usb).
+  @Auth('bills.print')
+  @Get(':id/print/escpos')
+  async receiptEscpos(
+    @CurrentUser() user: SessionUser,
+    @Query('branchId') branchId: string,
+    @Param('id') id: string,
+    @Query('width') width?: string,
+    @Query('drawer') drawer?: string,
+    @Query() query: Record<string, string> = {},
+  ) {
+    const { job, profile } = await this.receiptJob(
+      user,
+      branchId,
+      id,
+      query,
+      width,
+      drawer === 'true',
+    );
+    return {
+      ...escposPayload(job.buffer, profile),
+      unsupportedChars: job.unsupportedChars,
+    };
+  }
+
+  // Kitchen ticket bytes. `data` holds every matching ticket back to back
+  // (each ends with its own cut); `tickets` lists them one by one.
+  // station=<id> or kot=<id> narrows it (kot is what auto-print uses).
+  @Auth('orders.create')
+  @Get(':id/kot/escpos')
+  async kotEscpos(
+    @CurrentUser() user: SessionUser,
+    @Query('branchId') branchId: string,
+    @Param('id') id: string,
+    @Query('station') station?: string,
+    @Query('kot') kot?: string,
+  ) {
+    await this.branchAccess.assertAccess(user.restaurantId, branchId);
+    const tickets = await this.kotPrint.escposForOrder(branchId, id, {
+      stationId: station || undefined,
+      kotId: kot || undefined,
+    });
+    const profile = await this.ordersService.printerProfile(branchId);
+    return {
+      ...escposPayload(
+        Buffer.concat(tickets.map((t) => t.job.buffer)),
+        profile,
+      ),
+      tickets: tickets.map((t) => ({
+        kotId: t.kotId,
+        ticketNumber: t.ticketNumber,
+        stationId: t.stationId,
+        stationName: t.stationName,
+        data: t.job.buffer.toString('base64'),
+      })),
+    };
+  }
+
   // --- Direct-USB thermal printing (ESC/POS) ---------------------------------
+  // Server-side printing: OFF unless ALLOW_SERVER_PRINT=true (see
+  // common/config/server-print.ts); otherwise these answer 409.
   // Ported from nodedr-pos, which has real hardware to verify against; this
   // app's transport/byte-building code is identical in structure (see
   // escpos-usb.ts/escpos-receipt.ts file comments) but has only been
@@ -510,6 +625,7 @@ export class OrdersController {
     @CurrentUser() user: SessionUser,
     @Query('branchId') branchId?: string,
   ) {
+    assertServerPrintEnabled();
     const lpDevices = await probeCharDevices();
     const libusbPrinter = findPrinterDescriptor();
     let network: {
@@ -567,6 +683,7 @@ export class OrdersController {
     @Query('branchId') branchId?: string,
     @Query('kind') kind?: string,
   ) {
+    assertServerPrintEnabled();
     let profile = resolveProfile();
     let target: BranchPrinterTarget = {
       printerConnection: 'USB',
@@ -593,6 +710,7 @@ export class OrdersController {
     @CurrentUser() user: SessionUser,
     @Query('branchId') branchId?: string,
   ) {
+    assertServerPrintEnabled();
     let target: BranchPrinterTarget = {
       printerConnection: 'USB',
       printerHost: null,
@@ -617,6 +735,58 @@ export class OrdersController {
     @Query('width') width?: string,
     @Query('drawer') drawer?: string,
     @Query() query: Record<string, string> = {},
+  ) {
+    assertServerPrintEnabled();
+    const { job, order } = await this.receiptJob(
+      user,
+      branchId,
+      id,
+      query,
+      width,
+      drawer === 'true',
+    );
+    return this.sendJob(job, order.branch);
+  }
+
+  // Kitchen tickets of an order on the thermal printer: one ticket per kitchen
+  // round/station, only those not printed yet. A repeat call answers 409
+  // ALREADY_PRINTED instead of printing a duplicate; `reprint=true` prints
+  // every ticket again, stamped REPRINT.
+  @Auth('orders.create')
+  @Post(':id/print/kot')
+  async printKot(
+    @CurrentUser() user: SessionUser,
+    @Query('branchId') branchId: string,
+    @Param('id') id: string,
+    @Query('reprint') reprint?: string,
+  ) {
+    assertServerPrintEnabled();
+    await this.branchAccess.assertAccess(user.restaurantId, branchId);
+    return this.kotPrint.printOrder(branchId, id, reprint === 'true');
+  }
+
+  // Kept for older clients; same behaviour as POST :id/print/kot.
+  @Auth('orders.create')
+  @Post(':id/print/kot/usb')
+  async printKotUsb(
+    @CurrentUser() user: SessionUser,
+    @Query('branchId') branchId: string,
+    @Param('id') id: string,
+    @Query('reprint') reprint?: string,
+  ) {
+    assertServerPrintEnabled();
+    return this.printKot(user, branchId, id, reprint);
+  }
+
+  // Shared by the server-print route and the desktop bytes route: same
+  // bill/receipt layout, branch paper width and code page.
+  private async receiptJob(
+    user: SessionUser,
+    branchId: string,
+    id: string,
+    query: Record<string, string>,
+    width: string | undefined,
+    openDrawer: boolean,
   ) {
     await this.branchAccess.assertAccess(user.restaurantId, branchId);
     const adj = billPreviewSchema.parse(query);
@@ -660,37 +830,9 @@ export class OrdersController {
       },
       profile,
       // A bill handed over before payment never pops the till.
-      openDrawer: drawer === 'true' && !overrides.isProvisional,
+      openDrawer: openDrawer && !overrides.isProvisional,
     });
-    return this.sendJob(job, order.branch);
-  }
-
-  // Kitchen tickets of an order on the thermal printer: one ticket per kitchen
-  // round/station, only those not printed yet. A repeat call answers 409
-  // ALREADY_PRINTED instead of printing a duplicate; `reprint=true` prints
-  // every ticket again, stamped REPRINT.
-  @Auth('orders.create')
-  @Post(':id/print/kot')
-  async printKot(
-    @CurrentUser() user: SessionUser,
-    @Query('branchId') branchId: string,
-    @Param('id') id: string,
-    @Query('reprint') reprint?: string,
-  ) {
-    await this.branchAccess.assertAccess(user.restaurantId, branchId);
-    return this.kotPrint.printOrder(branchId, id, reprint === 'true');
-  }
-
-  // Kept for older clients; same behaviour as POST :id/print/kot.
-  @Auth('orders.create')
-  @Post(':id/print/kot/usb')
-  async printKotUsb(
-    @CurrentUser() user: SessionUser,
-    @Query('branchId') branchId: string,
-    @Param('id') id: string,
-    @Query('reprint') reprint?: string,
-  ) {
-    return this.printKot(user, branchId, id, reprint);
+    return { job, order, profile };
   }
 
   private async deliver(target: BranchPrinterTarget, buffer: Buffer) {
