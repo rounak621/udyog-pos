@@ -28,6 +28,7 @@ import { InventoryService } from '../inventory/inventory.service';
 import { MarketingService } from '../marketing/marketing.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { resolveProfile } from './escpos/encoder';
+import { nextOrderNumber } from './order-number';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RealtimeGateway } from '../../realtime/realtime.gateway';
 import {
@@ -320,9 +321,9 @@ export class OrdersService {
       }
     }
 
-    const orderNumber = await this.nextOrderNumber(branchId);
-
     const order = await this.prisma.$transaction(async (tx) => {
+      // Inside the transaction, under a per-branch/day lock (order-number.ts).
+      const orderNumber = await nextOrderNumber(tx, branchId);
       const created = await tx.order.create({
         data: {
           branchId,
@@ -2110,22 +2111,6 @@ export class OrdersService {
       selectedModifiers,
       priced,
     };
-  }
-
-  // Next number for today: highest existing sequence + 1, not a row count. A
-  // count collides with an existing number as soon as any earlier order of the
-  // day has been deleted (orders.delete), and that surfaced as a 409 on the
-  // unique (branchId, orderNumber) index.
-  private async nextOrderNumber(branchId: string): Promise<string> {
-    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const latest = await this.prisma.order.findFirst({
-      where: { branchId, orderNumber: { startsWith: `${datePart}-` } },
-      orderBy: { orderNumber: 'desc' },
-      select: { orderNumber: true },
-    });
-    const last = latest ? Number(latest.orderNumber.split('-')[1]) : 0;
-    const next = (Number.isFinite(last) ? last : 0) + 1;
-    return `${datePart}-${String(next).padStart(4, '0')}`;
   }
 
   /**
